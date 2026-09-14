@@ -1,0 +1,1 @@
+"""yoLingo application package."""
