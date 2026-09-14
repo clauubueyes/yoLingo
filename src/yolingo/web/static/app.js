@@ -19,6 +19,7 @@ const flashcardLoading = document.querySelector("#flashcard-loading");
 const flashcardEmpty = document.querySelector("#flashcard-empty");
 const flashcardList = document.querySelector("#flashcard-list");
 const flashcardSearch = document.querySelector("#flashcard-search");
+const showFlashcardFormButton = document.querySelector("#show-flashcard-form-button");
 
 let languages = [];
 let selectedLanguage = null;
@@ -28,6 +29,7 @@ let categoryFormParentId = null;
 let flashcards = [];
 let editingFlashcardId = null;
 let activeFlashcardCategoryId = null;
+let flashcardLoadVersion = 0;
 
 function showForm() {
   languageForm.hidden = false;
@@ -343,6 +345,7 @@ async function deleteCategory(category) {
 }
 
 function resetFlashcardView() {
+  flashcardLoadVersion += 1;
   flashcards = [];
   activeFlashcardCategoryId = null;
   flashcardSearch.value = "";
@@ -351,6 +354,8 @@ function resetFlashcardView() {
   flashcardEmpty.hidden = true;
   flashcardList.replaceChildren();
   categoryContext.setAttribute("aria-busy", "false");
+  showFlashcardFormButton.disabled = false;
+  flashcardSearch.disabled = false;
   hideFlashcardForm();
 }
 
@@ -390,6 +395,9 @@ function createFlashcardDetail(label, value) {
 function createFlashcardItem(flashcard) {
   const item = document.createElement("article");
   item.className = "flashcard-item";
+  item.dataset.flashcardId = flashcard.id;
+  item.tabIndex = -1;
+  item.setAttribute("aria-label", `Flashcard: ${flashcard.term}, ${flashcard.translation}`);
 
   const term = document.createElement("p");
   term.className = "flashcard-term";
@@ -418,7 +426,7 @@ function createFlashcardItem(flashcard) {
   deleteButton.type = "button";
   deleteButton.textContent = "Eliminar";
   deleteButton.setAttribute("aria-label", `Eliminar ${flashcard.term}`);
-  deleteButton.addEventListener("click", () => deleteFlashcard(flashcard));
+  deleteButton.addEventListener("click", () => deleteFlashcard(flashcard, deleteButton));
   actions.append(editButton, deleteButton);
   item.append(actions);
   return item;
@@ -446,10 +454,13 @@ function renderFlashcards() {
 
 async function loadFlashcards(categoryId) {
   resetFlashcardView();
+  const loadVersion = flashcardLoadVersion;
   activeFlashcardCategoryId = categoryId;
   const languageId = selectedLanguage.id;
   categoryContext.setAttribute("aria-busy", "true");
   flashcardLoading.hidden = false;
+  showFlashcardFormButton.disabled = true;
+  flashcardSearch.disabled = true;
 
   try {
     const response = await fetch(
@@ -461,17 +472,28 @@ async function loadFlashcards(categoryId) {
       selectedLanguage?.id !== languageId
       || selectedCategoryId !== categoryId
       || activeFlashcardCategoryId !== categoryId
+      || flashcardLoadVersion !== loadVersion
     ) return;
     flashcards = loadedFlashcards;
     renderFlashcards();
   } catch (error) {
-    if (selectedLanguage?.id === languageId && selectedCategoryId === categoryId) {
+    if (
+      selectedLanguage?.id === languageId
+      && selectedCategoryId === categoryId
+      && flashcardLoadVersion === loadVersion
+    ) {
       flashcardStatus.textContent = error.message;
     }
   } finally {
-    if (selectedLanguage?.id === languageId && selectedCategoryId === categoryId) {
+    if (
+      selectedLanguage?.id === languageId
+      && selectedCategoryId === categoryId
+      && flashcardLoadVersion === loadVersion
+    ) {
       flashcardLoading.hidden = true;
       categoryContext.setAttribute("aria-busy", "false");
+      showFlashcardFormButton.disabled = false;
+      flashcardSearch.disabled = false;
     }
   }
 }
@@ -520,6 +542,7 @@ async function submitFlashcard(event) {
     flashcardStatus.textContent = flashcardId
       ? `${saved.term} se ha actualizado.`
       : `${saved.term} se ha creado correctamente.`;
+    document.querySelector(`[data-flashcard-id="${saved.id}"]`)?.focus();
   } catch (error) {
     flashcardFormMessage.textContent = error.message;
   } finally {
@@ -527,9 +550,10 @@ async function submitFlashcard(event) {
   }
 }
 
-async function deleteFlashcard(flashcard) {
+async function deleteFlashcard(flashcard, deleteButton) {
   if (!window.confirm(`¿Eliminar ${flashcard.term}?`)) return;
 
+  deleteButton.disabled = true;
   const languageId = selectedLanguage.id;
   const categoryId = selectedCategoryId;
   flashcardStatus.textContent = `Eliminando ${flashcard.term}…`;
@@ -545,8 +569,11 @@ async function deleteFlashcard(flashcard) {
     if (editingFlashcardId === flashcard.id) hideFlashcardForm();
     renderFlashcards();
     flashcardStatus.textContent = `${flashcard.term} se ha eliminado.`;
+    showFlashcardFormButton.focus();
   } catch (error) {
     flashcardStatus.textContent = error.message;
+  } finally {
+    deleteButton.disabled = false;
   }
 }
 
@@ -603,7 +630,7 @@ document.querySelector("#category-empty-action").addEventListener("click", () =>
   showCategoryForm();
 });
 document.querySelector("#close-category-form-button").addEventListener("click", hideCategoryForm);
-document.querySelector("#show-flashcard-form-button").addEventListener("click", () => {
+showFlashcardFormButton.addEventListener("click", () => {
   showFlashcardForm();
 });
 document.querySelector("#close-flashcard-form-button").addEventListener("click", hideFlashcardForm);

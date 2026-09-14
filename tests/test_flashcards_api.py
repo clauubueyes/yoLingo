@@ -35,6 +35,27 @@ def test_user_can_create_list_and_get_a_flashcard(app: FastAPI) -> None:
     assert found.json() == created.json()
 
 
+def test_flashcards_never_appear_in_another_category(app: FastAPI) -> None:
+    language_id, first_category_id = create_language_and_category(app)
+    second_category = asyncio.run(
+        request(
+            app,
+            "POST",
+            f"/api/v1/languages/{language_id}/categories",
+            json={"name": "Grammar"},
+        )
+    ).json()
+    first = create_flashcard(app, language_id, first_category_id)
+    create_flashcard(app, language_id, second_category["id"])
+
+    listed = asyncio.run(
+        request(app, "GET", flashcard_collection_path(language_id, first_category_id))
+    )
+
+    assert listed.status_code == httpx2.codes.OK
+    assert [item["id"] for item in listed.json()] == [first["id"]]
+
+
 def test_user_can_partially_update_and_clear_optional_content(app: FastAPI) -> None:
     language_id, category_id = create_language_and_category(app)
     created = create_flashcard(app, language_id, category_id)

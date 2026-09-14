@@ -36,6 +36,12 @@ button {
   cursor: pointer;
 }
 
+button:disabled,
+input:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .site-header {
   display: flex;
   align-items: center;
@@ -581,6 +587,11 @@ textarea:focus {
   border-radius: 1rem;
   background: white;
   box-shadow: 0 8px 24px rgb(25 53 47 / 6%);
+}
+
+.flashcard-item:focus-visible {
+  outline: 3px solid rgb(220 236 159 / 80%);
+  outline-offset: 2px;
 }
 
 .flashcard-term {
