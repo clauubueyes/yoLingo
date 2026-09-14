@@ -20,6 +20,12 @@ const flashcardEmpty = document.querySelector("#flashcard-empty");
 const flashcardList = document.querySelector("#flashcard-list");
 const flashcardSearch = document.querySelector("#flashcard-search");
 const showFlashcardFormButton = document.querySelector("#show-flashcard-form-button");
+const tagForm = document.querySelector("#tag-form");
+const tagFormMessage = document.querySelector("#tag-form-message");
+const tagFilterList = document.querySelector("#tag-filter-list");
+const tagEmpty = document.querySelector("#tag-empty");
+const clearFiltersButton = document.querySelector("#clear-filters-button");
+const flashcardTagOptions = document.querySelector("#flashcard-tag-options");
 
 let languages = [];
 let selectedLanguage = null;
@@ -30,6 +36,9 @@ let flashcards = [];
 let editingFlashcardId = null;
 let activeFlashcardCategoryId = null;
 let flashcardLoadVersion = 0;
+let availableTags = [];
+let selectedFilterTagIds = new Set();
+let flashcardSearchTimer = null;
 
 function showForm() {
   languageForm.hidden = false;
@@ -55,11 +64,17 @@ function selectLanguage(language) {
   selection.hidden = false;
   categoryLibrary.hidden = false;
   hideCategoryForm();
-  resetFlashcardView();
+  availableTags = [];
+  selectedFilterTagIds = new Set();
+  clearTimeout(flashcardSearchTimer);
+  resetFlashcardView({ clearFilters: true });
+  renderTagFilters();
+  renderFlashcardTagOptions();
 
   document.querySelectorAll(".language-card").forEach((card) => {
     card.setAttribute("aria-pressed", String(Number(card.dataset.id) === language.id));
   });
+  loadTags(language.id);
   loadCategories(language.id);
   selection.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -344,11 +359,14 @@ async function deleteCategory(category) {
   }
 }
 
-function resetFlashcardView() {
+function resetFlashcardView({ clearFilters = false } = {}) {
   flashcardLoadVersion += 1;
   flashcards = [];
   activeFlashcardCategoryId = null;
-  flashcardSearch.value = "";
+  if (clearFilters) {
+    flashcardSearch.value = "";
+    selectedFilterTagIds = new Set();
+  }
   flashcardStatus.textContent = "";
   flashcardLoading.hidden = true;
   flashcardEmpty.hidden = true;
@@ -357,6 +375,7 @@ function resetFlashcardView() {
   showFlashcardFormButton.disabled = false;
   flashcardSearch.disabled = false;
   hideFlashcardForm();
+  updateClearFiltersButton();
 }
 
 function showFlashcardForm(flashcard = null) {
@@ -372,6 +391,9 @@ function showFlashcardForm(flashcard = null) {
     flashcardForm.elements.example.value = flashcard.example || "";
     flashcardForm.elements.notes.value = flashcard.notes || "";
   }
+  renderFlashcardTagOptions(
+    new Set((flashcard?.tags || []).map((tag) => tag.id)),
+  );
   flashcardForm.hidden = false;
   flashcardForm.elements.term.focus();
 }
@@ -381,6 +403,181 @@ function hideFlashcardForm() {
   flashcardForm.reset();
   flashcardFormMessage.textContent = "";
   editingFlashcardId = null;
+}
+
+function selectedFlashcardTagIds() {
+  return Array.from(
+    flashcardTagOptions.querySelectorAll('input[type="checkbox"]:checked'),
+    (input) => Number(input.value),
+  );
+}
+
+function renderFlashcardTagOptions(selectedIds = new Set()) {
+  const options = availableTags.map((tag) => {
+    const label = document.createElement("label");
+    label.className = "flashcard-tag-option";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.name = "tag_ids";
+    checkbox.value = tag.id;
+    checkbox.checked = selectedIds.has(tag.id);
+    label.append(checkbox, document.createTextNode(tag.name));
+    return label;
+  });
+  flashcardTagOptions.replaceChildren(...options);
+  if (options.length === 0) {
+    const message = document.createElement("span");
+    message.className = "tag-empty";
+    message.textContent = "Crea un tag para poder asociarlo.";
+    flashcardTagOptions.append(message);
+  }
+}
+
+function updateClearFiltersButton() {
+  clearFiltersButton.hidden = (
+    flashcardSearch.value.trim() === "" && selectedFilterTagIds.size === 0
+  );
+}
+
+function renderTagFilters() {
+  const items = availableTags.map((tag) => {
+    const item = document.createElement("span");
+    item.className = "tag-filter-item";
+
+    const toggleButton = document.createElement("button");
+    toggleButton.className = "tag-filter-toggle";
+    toggleButton.type = "button";
+    toggleButton.textContent = tag.name;
+    toggleButton.setAttribute("aria-pressed", String(selectedFilterTagIds.has(tag.id)));
+    toggleButton.addEventListener("click", () => {
+      if (selectedFilterTagIds.has(tag.id)) {
+        selectedFilterTagIds.delete(tag.id);
+      } else {
+        selectedFilterTagIds.add(tag.id);
+      }
+      renderTagFilters();
+      if (selectedCategoryId !== null) loadFlashcards(selectedCategoryId);
+    });
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "tag-filter-delete";
+    deleteButton.type = "button";
+    deleteButton.textContent = "×";
+    deleteButton.title = `Eliminar ${tag.name}`;
+    deleteButton.setAttribute("aria-label", `Eliminar tag ${tag.name}`);
+    deleteButton.addEventListener("click", () => deleteTag(tag, deleteButton));
+    item.append(toggleButton, deleteButton);
+    return item;
+  });
+  tagFilterList.replaceChildren(...items);
+  tagEmpty.hidden = items.length > 0;
+  updateClearFiltersButton();
+}
+
+async function loadTags(languageId) {
+  tagEmpty.hidden = false;
+  tagEmpty.textContent = "Cargando tags…";
+  try {
+    const response = await fetch(`/api/v1/languages/${languageId}/tags`);
+    if (!response.ok) throw new Error("No se pudieron cargar los tags.");
+    const loadedTags = await response.json();
+    if (selectedLanguage?.id !== languageId) return;
+    availableTags = loadedTags;
+    selectedFilterTagIds = new Set(
+      [...selectedFilterTagIds].filter((id) => availableTags.some((tag) => tag.id === id)),
+    );
+    tagEmpty.textContent = "Todavía no hay tags en este idioma.";
+    renderTagFilters();
+    renderFlashcardTagOptions();
+  } catch (error) {
+    if (selectedLanguage?.id === languageId) {
+      availableTags = [];
+      tagFilterList.replaceChildren();
+      tagEmpty.hidden = false;
+      tagEmpty.textContent = error.message;
+      renderFlashcardTagOptions();
+    }
+  }
+}
+
+function showTagForm() {
+  tagForm.hidden = false;
+  tagFormMessage.textContent = "";
+  tagForm.elements.name.focus();
+}
+
+function hideTagForm() {
+  tagForm.hidden = true;
+  tagForm.reset();
+  tagFormMessage.textContent = "";
+}
+
+async function submitTag(event) {
+  event.preventDefault();
+  tagFormMessage.textContent = "";
+  const submitButton = tagForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  const languageId = selectedLanguage.id;
+  const selectedIds = new Set(selectedFlashcardTagIds());
+
+  try {
+    const response = await fetch(`/api/v1/languages/${languageId}/tags`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: new FormData(tagForm).get("name") }),
+    });
+    if (!response.ok) {
+      throw new Error(await responseError(response, "No se pudo crear el tag."));
+    }
+    const tag = await response.json();
+    if (selectedLanguage?.id !== languageId) return;
+    availableTags.push(tag);
+    availableTags.sort((first, second) => first.name.localeCompare(second.name));
+    selectedIds.add(tag.id);
+    hideTagForm();
+    renderTagFilters();
+    renderFlashcardTagOptions(selectedIds);
+    flashcardStatus.textContent = `${tag.name} se ha creado correctamente.`;
+  } catch (error) {
+    tagFormMessage.textContent = error.message;
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+async function deleteTag(tag, deleteButton) {
+  if (!window.confirm(`¿Eliminar el tag ${tag.name}?`)) return;
+
+  deleteButton.disabled = true;
+  const languageId = selectedLanguage.id;
+  const wasFiltering = selectedFilterTagIds.has(tag.id);
+  const selectedIds = new Set(
+    selectedFlashcardTagIds().filter((tagId) => tagId !== tag.id),
+  );
+  try {
+    const response = await fetch(`/api/v1/tags/${tag.id}`, { method: "DELETE" });
+    if (!response.ok) {
+      throw new Error(await responseError(response, "No se pudo eliminar el tag."));
+    }
+    if (selectedLanguage?.id !== languageId) return;
+    availableTags = availableTags.filter((item) => item.id !== tag.id);
+    selectedFilterTagIds.delete(tag.id);
+    flashcards = flashcards.map((flashcard) => ({
+      ...flashcard,
+      tags: (flashcard.tags || []).filter((item) => item.id !== tag.id),
+    }));
+    renderTagFilters();
+    renderFlashcardTagOptions(selectedIds);
+    if (wasFiltering && selectedCategoryId !== null) {
+      await loadFlashcards(selectedCategoryId);
+    } else {
+      renderFlashcards();
+    }
+    flashcardStatus.textContent = `${tag.name} se ha eliminado.`;
+  } catch (error) {
+    flashcardStatus.textContent = error.message;
+    deleteButton.disabled = false;
+  }
 }
 
 function createFlashcardDetail(label, value) {
@@ -413,6 +610,17 @@ function createFlashcardItem(flashcard) {
   if (flashcard.notes) {
     item.append(createFlashcardDetail("Notas", flashcard.notes));
   }
+  if (flashcard.tags?.length) {
+    const tags = document.createElement("div");
+    tags.className = "flashcard-tags";
+    flashcard.tags.forEach((tag) => {
+      const chip = document.createElement("span");
+      chip.className = "flashcard-tag";
+      chip.textContent = tag.name;
+      tags.append(chip);
+    });
+    item.append(tags);
+  }
 
   const actions = document.createElement("div");
   actions.className = "flashcard-item-actions";
@@ -433,28 +641,30 @@ function createFlashcardItem(flashcard) {
 }
 
 function renderFlashcards() {
-  const query = flashcardSearch.value.trim().toLocaleLowerCase();
-  const visibleFlashcards = flashcards.filter((flashcard) => (
-    flashcard.term.toLocaleLowerCase().includes(query)
-    || flashcard.translation.toLocaleLowerCase().includes(query)
-  ));
-  flashcardList.replaceChildren(...visibleFlashcards.map(createFlashcardItem));
-  flashcardEmpty.hidden = visibleFlashcards.length > 0;
+  flashcardList.replaceChildren(...flashcards.map(createFlashcardItem));
+  flashcardEmpty.hidden = flashcards.length > 0;
 
   const emptyTitle = document.querySelector("#flashcard-empty-title");
   const emptyCopy = document.querySelector("#flashcard-empty-copy");
-  if (query && visibleFlashcards.length === 0) {
+  const hasFilters = flashcardSearch.value.trim() || selectedFilterTagIds.size > 0;
+  if (hasFilters && flashcards.length === 0) {
     emptyTitle.textContent = "No hay resultados";
-    emptyCopy.textContent = "Prueba con otro término o traducción.";
+    emptyCopy.textContent = "Prueba con otro texto o cambia los tags seleccionados.";
   } else {
     emptyTitle.textContent = "Aún no hay flashcards";
     emptyCopy.textContent = "Crea la primera para comenzar tu vocabulario.";
   }
+  updateClearFiltersButton();
 }
 
 async function loadFlashcards(categoryId) {
-  resetFlashcardView();
+  flashcardLoadVersion += 1;
   const loadVersion = flashcardLoadVersion;
+  flashcards = [];
+  flashcardList.replaceChildren();
+  flashcardEmpty.hidden = true;
+  flashcardStatus.textContent = "";
+  hideFlashcardForm();
   activeFlashcardCategoryId = categoryId;
   const languageId = selectedLanguage.id;
   categoryContext.setAttribute("aria-busy", "true");
@@ -463,8 +673,15 @@ async function loadFlashcards(categoryId) {
   flashcardSearch.disabled = true;
 
   try {
+    const query = new URLSearchParams();
+    const search = flashcardSearch.value.trim();
+    if (search) query.set("search", search);
+    [...selectedFilterTagIds]
+      .sort((first, second) => first - second)
+      .forEach((tagId) => query.append("tag_ids", tagId));
+    const queryString = query.toString();
     const response = await fetch(
-      `/api/v1/languages/${languageId}/categories/${categoryId}/flashcards`,
+      `/api/v1/languages/${languageId}/categories/${categoryId}/flashcards${queryString ? `?${queryString}` : ""}`,
     );
     if (!response.ok) throw new Error("No se pudieron cargar las flashcards.");
     const loadedFlashcards = await response.json();
@@ -506,6 +723,7 @@ async function submitFlashcard(event) {
   const languageId = selectedLanguage.id;
   const categoryId = selectedCategoryId;
   const flashcardId = editingFlashcardId;
+  const tagIds = selectedFlashcardTagIds();
   const data = new FormData(flashcardForm);
   const payload = {
     term: data.get("term"),
@@ -529,16 +747,23 @@ async function submitFlashcard(event) {
     const saved = await response.json();
     if (selectedLanguage?.id !== languageId || selectedCategoryId !== categoryId) return;
 
-    if (flashcardId) {
-      flashcards = flashcards.map((flashcard) => (
-        flashcard.id === saved.id ? saved : flashcard
-      ));
-    } else {
-      flashcards.push(saved);
+    const tagResponse = await fetch(`/api/v1/flashcards/${saved.id}/tags`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tag_ids: tagIds }),
+    });
+    if (selectedLanguage?.id !== languageId || selectedCategoryId !== categoryId) return;
+    if (!tagResponse.ok) {
+      hideFlashcardForm();
+      await loadFlashcards(categoryId);
+      flashcardStatus.textContent = (
+        `${saved.term} se guardó, pero no se pudieron actualizar sus tags.`
+      );
+      return;
     }
-    flashcards.sort((first, second) => first.term.localeCompare(second.term));
     hideFlashcardForm();
-    renderFlashcards();
+    await loadFlashcards(categoryId);
+    if (selectedLanguage?.id !== languageId || selectedCategoryId !== categoryId) return;
     flashcardStatus.textContent = flashcardId
       ? `${saved.term} se ha actualizado.`
       : `${saved.term} se ha creado correctamente.`;
@@ -630,6 +855,8 @@ document.querySelector("#category-empty-action").addEventListener("click", () =>
   showCategoryForm();
 });
 document.querySelector("#close-category-form-button").addEventListener("click", hideCategoryForm);
+document.querySelector("#show-tag-form-button").addEventListener("click", showTagForm);
+document.querySelector("#cancel-tag-form-button").addEventListener("click", hideTagForm);
 showFlashcardFormButton.addEventListener("click", () => {
   showFlashcardForm();
 });
@@ -637,7 +864,20 @@ document.querySelector("#close-flashcard-form-button").addEventListener("click",
 document.querySelector("#cancel-flashcard-form-button").addEventListener("click", hideFlashcardForm);
 languageForm.addEventListener("submit", submitLanguage);
 categoryForm.addEventListener("submit", submitCategory);
+tagForm.addEventListener("submit", submitTag);
 flashcardForm.addEventListener("submit", submitFlashcard);
-flashcardSearch.addEventListener("input", renderFlashcards);
+flashcardSearch.addEventListener("input", () => {
+  clearTimeout(flashcardSearchTimer);
+  updateClearFiltersButton();
+  if (selectedCategoryId === null) return;
+  flashcardSearchTimer = setTimeout(() => loadFlashcards(selectedCategoryId), 250);
+});
+clearFiltersButton.addEventListener("click", () => {
+  clearTimeout(flashcardSearchTimer);
+  flashcardSearch.value = "";
+  selectedFilterTagIds = new Set();
+  renderTagFilters();
+  if (selectedCategoryId !== null) loadFlashcards(selectedCategoryId);
+});
 
 loadLanguages();

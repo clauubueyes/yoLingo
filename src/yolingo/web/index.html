@@ -175,6 +175,34 @@
                 >
               </label>
 
+              <div class="tag-tools">
+                <div class="tag-tools-heading">
+                  <div>
+                    <h4>Filtrar por tags</h4>
+                    <p>Selecciona varios para exigir que aparezcan todos.</p>
+                  </div>
+                  <button class="button button-quiet" id="show-tag-form-button" type="button">
+                    + Nuevo tag
+                  </button>
+                </div>
+                <form class="tag-form" id="tag-form" hidden>
+                  <label>
+                    Nombre del tag
+                    <input name="name" type="text" maxlength="80" autocomplete="off" required>
+                  </label>
+                  <button class="button button-primary" type="submit">Crear tag</button>
+                  <button class="button button-quiet" id="cancel-tag-form-button" type="button">
+                    Cancelar
+                  </button>
+                  <p class="form-message" id="tag-form-message" role="alert"></p>
+                </form>
+                <div class="tag-filter-list" id="tag-filter-list"></div>
+                <p class="tag-empty" id="tag-empty">Todavía no hay tags en este idioma.</p>
+                <button class="clear-filters" id="clear-filters-button" type="button" hidden>
+                  Limpiar filtros
+                </button>
+              </div>
+
               <form class="language-form flashcard-form" id="flashcard-form" hidden>
                 <div class="form-heading">
                   <div>
@@ -208,6 +236,11 @@
                     <textarea name="notes" rows="2"></textarea>
                   </label>
                 </div>
+                <fieldset class="flashcard-tag-fieldset">
+                  <legend>Tags</legend>
+                  <p>Selecciona todos los que quieras asociar.</p>
+                  <div class="flashcard-tag-options" id="flashcard-tag-options"></div>
+                </fieldset>
                 <div class="form-actions">
                   <p class="form-message" id="flashcard-form-message" role="alert"></p>
                   <div class="inline-actions">
