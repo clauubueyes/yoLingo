@@ -88,6 +88,80 @@
           <p>Tu biblioteca está preparada para organizar el vocabulario de este idioma.</p>
         </div>
       </section>
+
+      <section class="category-library" id="category-library" aria-labelledby="category-title" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Organización</p>
+            <h2 id="category-title">Categorías</h2>
+          </div>
+          <button class="button button-primary" id="show-category-form-button" type="button">
+            <span aria-hidden="true">+</span> Nueva categoría
+          </button>
+        </div>
+
+        <form class="language-form category-form" id="category-form" hidden>
+          <div class="form-heading">
+            <div>
+              <h3 id="category-form-title">Añade una categoría</h3>
+              <p id="category-form-hint">Crea un grupo para organizar tu vocabulario.</p>
+            </div>
+            <button
+              class="icon-button"
+              id="close-category-form-button"
+              type="button"
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+          </div>
+          <label>
+            Nombre
+            <input
+              name="name"
+              type="text"
+              maxlength="80"
+              autocomplete="off"
+              placeholder="Everyday"
+              required
+            >
+          </label>
+          <div class="form-actions">
+            <p class="form-message" id="category-form-message" role="alert"></p>
+            <button class="button button-primary" type="submit">Crear</button>
+          </div>
+        </form>
+
+        <p class="library-status" id="category-status" role="status" aria-live="polite"></p>
+        <p class="loading-state" id="category-loading" hidden>Cargando categorías…</p>
+
+        <div class="category-empty empty-state" id="category-empty" hidden>
+          <div class="empty-icon" aria-hidden="true">Aa</div>
+          <h3>Aún no hay categorías</h3>
+          <p>Crea una categoría para empezar a organizar la biblioteca de este idioma.</p>
+          <button class="button button-secondary" id="category-empty-action" type="button">
+            Crear la primera categoría
+          </button>
+        </div>
+
+        <div class="category-layout" id="category-content" hidden>
+          <nav class="category-navigation" aria-label="Categorías del idioma">
+            <div class="category-tree" id="category-tree"></div>
+          </nav>
+          <div class="category-context">
+            <div id="category-placeholder">
+              <p class="eyebrow">Biblioteca</p>
+              <h3>Selecciona una categoría</h3>
+              <p>Elige una categoría para preparar el vocabulario que contendrá.</p>
+            </div>
+            <div id="selected-category" hidden>
+              <p class="eyebrow">Categoría seleccionada</p>
+              <h3 id="selected-category-name"></h3>
+              <p>Las flashcards de esta categoría aparecerán aquí en el siguiente incremento.</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer>Hecho para aprender palabra a palabra.</footer>

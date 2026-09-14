@@ -5,13 +5,24 @@ from fastapi import FastAPI
 
 
 def test_home_page_is_available(app: FastAPI) -> None:
-    response = asyncio.run(get_home_page(app))
+    response = asyncio.run(get_response(app, "/"))
 
     assert response.status_code == httpx2.codes.OK
     assert "¿Qué idioma quieres practicar?" in response.text
+    assert "Categorías" in response.text
+    assert "Selecciona una categoría" in response.text
 
 
-async def get_home_page(app: FastAPI) -> httpx2.Response:
+def test_category_client_is_available(app: FastAPI) -> None:
+    response = asyncio.run(get_response(app, "/static/app.js"))
+
+    assert response.status_code == httpx2.codes.OK
+    assert "loadCategories" in response.text
+    assert 'method: "POST"' in response.text
+    assert 'method: "DELETE"' in response.text
+
+
+async def get_response(app: FastAPI, path: str) -> httpx2.Response:
     transport = httpx2.ASGITransport(app=app)
     async with httpx2.AsyncClient(transport=transport, base_url="http://testserver") as client:
-        return await client.get("/")
+        return await client.get(path)
