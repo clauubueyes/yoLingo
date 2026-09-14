@@ -4,8 +4,10 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
 from yolingo.repositories.categories import CategoryRepository
+from yolingo.repositories.flashcards import FlashcardRepository
 from yolingo.repositories.languages import LanguageRepository
 from yolingo.services.categories import CategoryService
+from yolingo.services.flashcards import FlashcardService
 from yolingo.services.languages import LanguageService
 
 
@@ -28,3 +30,14 @@ def get_category_service(session: SessionDependency) -> CategoryService:
 
 
 CategoryServiceDependency = Annotated[CategoryService, Depends(get_category_service)]
+
+
+def get_flashcard_service(session: SessionDependency) -> FlashcardService:
+    return FlashcardService(
+        FlashcardRepository(session),
+        CategoryRepository(session),
+        LanguageRepository(session),
+    )
+
+
+FlashcardServiceDependency = Annotated[FlashcardService, Depends(get_flashcard_service)]
