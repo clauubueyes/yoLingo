@@ -1,4 +1,6 @@
+import pytest
 from fastapi import FastAPI
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from yolingo.repositories.categories import CategoryRepository
@@ -73,3 +75,16 @@ def test_delete_category_removes_it_and_its_children(app: FastAPI) -> None:
 def test_delete_category_returns_false_when_it_does_not_exist(app: FastAPI) -> None:
     with Session(app.state.database.engine) as session:
         assert CategoryRepository(session).delete(999) is False
+
+
+def test_category_foreign_keys_are_enforced_and_the_session_recovers(app: FastAPI) -> None:
+    with Session(app.state.database.engine) as session:
+        categories = CategoryRepository(session)
+
+        with pytest.raises(IntegrityError):
+            categories.create(language_id=999, name="Orphan", parent_id=None)
+
+        language = LanguageRepository(session).create(name="Norwegian", code="nb", flag=None)
+        category = categories.create(language_id=language.id, name="Everyday", parent_id=None)
+
+        assert category.language_id == language.id

@@ -214,6 +214,7 @@ function renderCategories() {
 }
 
 async function loadCategories(languageId) {
+  categoryLibrary.setAttribute("aria-busy", "true");
   categoryLoading.hidden = false;
   categoryEmpty.hidden = true;
   categoryContent.hidden = true;
@@ -233,6 +234,7 @@ async function loadCategories(languageId) {
   } finally {
     if (selectedLanguage?.id === languageId) {
       categoryLoading.hidden = true;
+      categoryLibrary.setAttribute("aria-busy", "false");
     }
   }
 }

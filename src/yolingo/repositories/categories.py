@@ -1,4 +1,5 @@
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from yolingo.models.category import Category
@@ -33,7 +34,11 @@ class CategoryRepository:
     def create(self, *, language_id: int, name: str, parent_id: int | None) -> Category:
         category = Category(language_id=language_id, name=name, parent_id=parent_id)
         self._session.add(category)
-        self._session.commit()
+        try:
+            self._session.commit()
+        except IntegrityError:
+            self._session.rollback()
+            raise
         self._session.refresh(category)
         return category
 
