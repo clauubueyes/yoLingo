@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from yolingo.database import Base
+
+if TYPE_CHECKING:
+    from yolingo.models.category import Category
 
 
 class Language(Base):
@@ -17,4 +21,8 @@ class Language(Base):
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
+    )
+    categories: Mapped[list["Category"]] = relationship(
+        back_populates="language",
+        cascade="all, delete-orphan",
     )
