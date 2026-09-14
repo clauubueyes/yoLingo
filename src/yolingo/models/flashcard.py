@@ -5,10 +5,12 @@ from sqlalchemy import ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from yolingo.database import Base
+from yolingo.models.tag import flashcard_tags
 
 if TYPE_CHECKING:
     from yolingo.models.category import Category
     from yolingo.models.language import Language
+    from yolingo.models.tag import Tag
 
 
 class Flashcard(Base):
@@ -35,3 +37,7 @@ class Flashcard(Base):
 
     language: Mapped["Language"] = relationship(back_populates="flashcards")
     category: Mapped["Category"] = relationship(back_populates="flashcards")
+    tags: Mapped[list["Tag"]] = relationship(
+        secondary=flashcard_tags,
+        back_populates="flashcards",
+    )

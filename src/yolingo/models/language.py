@@ -9,6 +9,7 @@ from yolingo.database import Base
 if TYPE_CHECKING:
     from yolingo.models.category import Category
     from yolingo.models.flashcard import Flashcard
+    from yolingo.models.tag import Tag
 
 
 class Language(Base):
@@ -28,6 +29,10 @@ class Language(Base):
         cascade="all, delete-orphan",
     )
     flashcards: Mapped[list["Flashcard"]] = relationship(
+        back_populates="language",
+        cascade="all, delete-orphan",
+    )
+    tags: Mapped[list["Tag"]] = relationship(
         back_populates="language",
         cascade="all, delete-orphan",
     )

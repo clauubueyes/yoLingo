@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from yolingo.models.flashcard import Flashcard
+from yolingo.models.tag import Tag, flashcard_tags
 
 
 class FlashcardRepository:
@@ -19,6 +20,29 @@ class FlashcardRepository:
 
     def get_by_id(self, flashcard_id: int) -> Flashcard | None:
         return self._session.get(Flashcard, flashcard_id)
+
+    def get_tags(self, flashcard_id: int) -> list[Tag]:
+        statement = (
+            select(Tag)
+            .join(flashcard_tags, Tag.id == flashcard_tags.c.tag_id)
+            .where(flashcard_tags.c.flashcard_id == flashcard_id)
+            .order_by(func.lower(Tag.name), Tag.id)
+        )
+        return list(self._session.scalars(statement))
+
+    def add_tag(self, flashcard: Flashcard, tag: Tag) -> bool:
+        if tag in flashcard.tags:
+            return False
+        flashcard.tags.append(tag)
+        self._session.commit()
+        return True
+
+    def remove_tag(self, flashcard: Flashcard, tag: Tag) -> bool:
+        if tag not in flashcard.tags:
+            return False
+        flashcard.tags.remove(tag)
+        self._session.commit()
+        return True
 
     def duplicate_exists(
         self,
