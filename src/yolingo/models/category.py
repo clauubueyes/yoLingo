@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from yolingo.database import Base
 
 if TYPE_CHECKING:
+    from yolingo.models.flashcard import Flashcard
     from yolingo.models.language import Language
 
 
@@ -37,5 +38,9 @@ class Category(Base):
     )
     children: Mapped[list["Category"]] = relationship(
         back_populates="parent",
+        cascade="all, delete-orphan",
+    )
+    flashcards: Mapped[list["Flashcard"]] = relationship(
+        back_populates="category",
         cascade="all, delete-orphan",
     )

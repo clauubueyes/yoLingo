@@ -8,6 +8,7 @@ from yolingo.database import Base
 
 if TYPE_CHECKING:
     from yolingo.models.category import Category
+    from yolingo.models.flashcard import Flashcard
 
 
 class Language(Base):
@@ -23,6 +24,10 @@ class Language(Base):
         onupdate=func.current_timestamp(),
     )
     categories: Mapped[list["Category"]] = relationship(
+        back_populates="language",
+        cascade="all, delete-orphan",
+    )
+    flashcards: Mapped[list["Flashcard"]] = relationship(
         back_populates="language",
         cascade="all, delete-orphan",
     )
