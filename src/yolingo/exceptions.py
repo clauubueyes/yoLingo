@@ -24,3 +24,23 @@ class CategoryParentLanguageMismatchError(Exception):
 
 class CategoryNestingLimitError(Exception):
     """Raised when an attempt would create more than two category levels."""
+
+
+class CategoryLanguageMismatchError(Exception):
+    """Raised when a category does not belong to the requested language."""
+
+
+class FlashcardNotFoundError(Exception):
+    """Raised when the requested flashcard does not exist."""
+
+
+class InvalidFlashcardTermError(Exception):
+    """Raised when a flashcard term is empty."""
+
+
+class InvalidFlashcardTranslationError(Exception):
+    """Raised when a flashcard translation is empty."""
+
+
+class FlashcardAlreadyExistsError(Exception):
+    """Raised when the same term and translation already exist in a category."""

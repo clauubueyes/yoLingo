@@ -20,6 +20,23 @@ class FlashcardRepository:
     def get_by_id(self, flashcard_id: int) -> Flashcard | None:
         return self._session.get(Flashcard, flashcard_id)
 
+    def duplicate_exists(
+        self,
+        *,
+        category_id: int,
+        term: str,
+        translation: str,
+        excluding_id: int | None = None,
+    ) -> bool:
+        statement = select(Flashcard.id).where(
+            Flashcard.category_id == category_id,
+            Flashcard.term == term,
+            Flashcard.translation == translation,
+        )
+        if excluding_id is not None:
+            statement = statement.where(Flashcard.id != excluding_id)
+        return self._session.scalar(statement.limit(1)) is not None
+
     def create(
         self,
         *,
