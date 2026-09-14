@@ -11,12 +11,23 @@ const categoryLoading = document.querySelector("#category-loading");
 const categoryEmpty = document.querySelector("#category-empty");
 const categoryContent = document.querySelector("#category-content");
 const categoryTree = document.querySelector("#category-tree");
+const categoryContext = document.querySelector(".category-context");
+const flashcardForm = document.querySelector("#flashcard-form");
+const flashcardFormMessage = document.querySelector("#flashcard-form-message");
+const flashcardStatus = document.querySelector("#flashcard-status");
+const flashcardLoading = document.querySelector("#flashcard-loading");
+const flashcardEmpty = document.querySelector("#flashcard-empty");
+const flashcardList = document.querySelector("#flashcard-list");
+const flashcardSearch = document.querySelector("#flashcard-search");
 
 let languages = [];
 let selectedLanguage = null;
 let categories = [];
 let selectedCategoryId = null;
 let categoryFormParentId = null;
+let flashcards = [];
+let editingFlashcardId = null;
+let activeFlashcardCategoryId = null;
 
 function showForm() {
   languageForm.hidden = false;
@@ -42,6 +53,7 @@ function selectLanguage(language) {
   selection.hidden = false;
   categoryLibrary.hidden = false;
   hideCategoryForm();
+  resetFlashcardView();
 
   document.querySelectorAll(".language-card").forEach((card) => {
     card.setAttribute("aria-pressed", String(Number(card.dataset.id) === language.id));
@@ -187,6 +199,8 @@ function updateCategorySelection() {
   document.querySelector("#category-placeholder").hidden = Boolean(category);
   document.querySelector("#selected-category").hidden = !category;
   document.querySelector("#selected-category-name").textContent = category?.name || "";
+  categoryContext.classList.toggle("has-selection", Boolean(category));
+  return category;
 }
 
 function selectCategory(category) {
@@ -196,6 +210,7 @@ function selectCategory(category) {
     String(category.id),
   );
   updateCategorySelection();
+  loadFlashcards(category.id);
 }
 
 function renderCategories() {
@@ -210,7 +225,12 @@ function renderCategories() {
   categoryTree.replaceChildren(...roots.map(createCategoryGroup));
   categoryEmpty.hidden = roots.length > 0;
   categoryContent.hidden = roots.length === 0;
-  updateCategorySelection();
+  const selectedCategory = updateCategorySelection();
+  if (selectedCategory) {
+    loadFlashcards(selectedCategory.id);
+  } else {
+    resetFlashcardView();
+  }
 }
 
 async function loadCategories(languageId) {
@@ -322,6 +342,214 @@ async function deleteCategory(category) {
   }
 }
 
+function resetFlashcardView() {
+  flashcards = [];
+  activeFlashcardCategoryId = null;
+  flashcardSearch.value = "";
+  flashcardStatus.textContent = "";
+  flashcardLoading.hidden = true;
+  flashcardEmpty.hidden = true;
+  flashcardList.replaceChildren();
+  categoryContext.setAttribute("aria-busy", "false");
+  hideFlashcardForm();
+}
+
+function showFlashcardForm(flashcard = null) {
+  editingFlashcardId = flashcard?.id ?? null;
+  flashcardForm.reset();
+  flashcardFormMessage.textContent = "";
+  document.querySelector("#flashcard-form-title").textContent = flashcard
+    ? "Editar flashcard"
+    : "Nueva flashcard";
+  if (flashcard) {
+    flashcardForm.elements.term.value = flashcard.term;
+    flashcardForm.elements.translation.value = flashcard.translation;
+    flashcardForm.elements.example.value = flashcard.example || "";
+    flashcardForm.elements.notes.value = flashcard.notes || "";
+  }
+  flashcardForm.hidden = false;
+  flashcardForm.elements.term.focus();
+}
+
+function hideFlashcardForm() {
+  flashcardForm.hidden = true;
+  flashcardForm.reset();
+  flashcardFormMessage.textContent = "";
+  editingFlashcardId = null;
+}
+
+function createFlashcardDetail(label, value) {
+  const detail = document.createElement("p");
+  detail.className = "flashcard-detail";
+  const heading = document.createElement("strong");
+  heading.textContent = `${label}: `;
+  detail.append(heading, document.createTextNode(value));
+  return detail;
+}
+
+function createFlashcardItem(flashcard) {
+  const item = document.createElement("article");
+  item.className = "flashcard-item";
+
+  const term = document.createElement("p");
+  term.className = "flashcard-term";
+  term.textContent = flashcard.term;
+  const translation = document.createElement("p");
+  translation.className = "flashcard-translation";
+  translation.textContent = flashcard.translation;
+  item.append(term, translation);
+
+  if (flashcard.example) {
+    item.append(createFlashcardDetail("Ejemplo", flashcard.example));
+  }
+  if (flashcard.notes) {
+    item.append(createFlashcardDetail("Notas", flashcard.notes));
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "flashcard-item-actions";
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.textContent = "Editar";
+  editButton.setAttribute("aria-label", `Editar ${flashcard.term}`);
+  editButton.addEventListener("click", () => showFlashcardForm(flashcard));
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "flashcard-delete";
+  deleteButton.type = "button";
+  deleteButton.textContent = "Eliminar";
+  deleteButton.setAttribute("aria-label", `Eliminar ${flashcard.term}`);
+  deleteButton.addEventListener("click", () => deleteFlashcard(flashcard));
+  actions.append(editButton, deleteButton);
+  item.append(actions);
+  return item;
+}
+
+function renderFlashcards() {
+  const query = flashcardSearch.value.trim().toLocaleLowerCase();
+  const visibleFlashcards = flashcards.filter((flashcard) => (
+    flashcard.term.toLocaleLowerCase().includes(query)
+    || flashcard.translation.toLocaleLowerCase().includes(query)
+  ));
+  flashcardList.replaceChildren(...visibleFlashcards.map(createFlashcardItem));
+  flashcardEmpty.hidden = visibleFlashcards.length > 0;
+
+  const emptyTitle = document.querySelector("#flashcard-empty-title");
+  const emptyCopy = document.querySelector("#flashcard-empty-copy");
+  if (query && visibleFlashcards.length === 0) {
+    emptyTitle.textContent = "No hay resultados";
+    emptyCopy.textContent = "Prueba con otro término o traducción.";
+  } else {
+    emptyTitle.textContent = "Aún no hay flashcards";
+    emptyCopy.textContent = "Crea la primera para comenzar tu vocabulario.";
+  }
+}
+
+async function loadFlashcards(categoryId) {
+  resetFlashcardView();
+  activeFlashcardCategoryId = categoryId;
+  const languageId = selectedLanguage.id;
+  categoryContext.setAttribute("aria-busy", "true");
+  flashcardLoading.hidden = false;
+
+  try {
+    const response = await fetch(
+      `/api/v1/languages/${languageId}/categories/${categoryId}/flashcards`,
+    );
+    if (!response.ok) throw new Error("No se pudieron cargar las flashcards.");
+    const loadedFlashcards = await response.json();
+    if (
+      selectedLanguage?.id !== languageId
+      || selectedCategoryId !== categoryId
+      || activeFlashcardCategoryId !== categoryId
+    ) return;
+    flashcards = loadedFlashcards;
+    renderFlashcards();
+  } catch (error) {
+    if (selectedLanguage?.id === languageId && selectedCategoryId === categoryId) {
+      flashcardStatus.textContent = error.message;
+    }
+  } finally {
+    if (selectedLanguage?.id === languageId && selectedCategoryId === categoryId) {
+      flashcardLoading.hidden = true;
+      categoryContext.setAttribute("aria-busy", "false");
+    }
+  }
+}
+
+async function submitFlashcard(event) {
+  event.preventDefault();
+  flashcardFormMessage.textContent = "";
+  const submitButton = flashcardForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  const languageId = selectedLanguage.id;
+  const categoryId = selectedCategoryId;
+  const flashcardId = editingFlashcardId;
+  const data = new FormData(flashcardForm);
+  const payload = {
+    term: data.get("term"),
+    translation: data.get("translation"),
+    example: data.get("example") || null,
+    notes: data.get("notes") || null,
+  };
+  const path = flashcardId
+    ? `/api/v1/flashcards/${flashcardId}`
+    : `/api/v1/languages/${languageId}/categories/${categoryId}/flashcards`;
+
+  try {
+    const response = await fetch(path, {
+      method: flashcardId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(await responseError(response, "No se pudo guardar la flashcard."));
+    }
+    const saved = await response.json();
+    if (selectedLanguage?.id !== languageId || selectedCategoryId !== categoryId) return;
+
+    if (flashcardId) {
+      flashcards = flashcards.map((flashcard) => (
+        flashcard.id === saved.id ? saved : flashcard
+      ));
+    } else {
+      flashcards.push(saved);
+    }
+    flashcards.sort((first, second) => first.term.localeCompare(second.term));
+    hideFlashcardForm();
+    renderFlashcards();
+    flashcardStatus.textContent = flashcardId
+      ? `${saved.term} se ha actualizado.`
+      : `${saved.term} se ha creado correctamente.`;
+  } catch (error) {
+    flashcardFormMessage.textContent = error.message;
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+async function deleteFlashcard(flashcard) {
+  if (!window.confirm(`¿Eliminar ${flashcard.term}?`)) return;
+
+  const languageId = selectedLanguage.id;
+  const categoryId = selectedCategoryId;
+  flashcardStatus.textContent = `Eliminando ${flashcard.term}…`;
+  try {
+    const response = await fetch(`/api/v1/flashcards/${flashcard.id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(await responseError(response, "No se pudo eliminar la flashcard."));
+    }
+    if (selectedLanguage?.id !== languageId || selectedCategoryId !== categoryId) return;
+    flashcards = flashcards.filter((item) => item.id !== flashcard.id);
+    if (editingFlashcardId === flashcard.id) hideFlashcardForm();
+    renderFlashcards();
+    flashcardStatus.textContent = `${flashcard.term} se ha eliminado.`;
+  } catch (error) {
+    flashcardStatus.textContent = error.message;
+  }
+}
+
 async function loadLanguages() {
   try {
     const response = await fetch("/api/v1/languages");
@@ -375,7 +603,14 @@ document.querySelector("#category-empty-action").addEventListener("click", () =>
   showCategoryForm();
 });
 document.querySelector("#close-category-form-button").addEventListener("click", hideCategoryForm);
+document.querySelector("#show-flashcard-form-button").addEventListener("click", () => {
+  showFlashcardForm();
+});
+document.querySelector("#close-flashcard-form-button").addEventListener("click", hideFlashcardForm);
+document.querySelector("#cancel-flashcard-form-button").addEventListener("click", hideFlashcardForm);
 languageForm.addEventListener("submit", submitLanguage);
 categoryForm.addEventListener("submit", submitCategory);
+flashcardForm.addEventListener("submit", submitFlashcard);
+flashcardSearch.addEventListener("input", renderFlashcards);
 
 loadLanguages();
