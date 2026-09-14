@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -43,6 +43,40 @@ class FlashcardRepository:
         flashcard.tags.remove(tag)
         self._session.commit()
         return True
+
+    def replace_tags(self, flashcard: Flashcard, tags: list[Tag]) -> None:
+        flashcard.tags = tags
+        self._session.commit()
+
+    def filter(
+        self,
+        *,
+        language_id: int,
+        category_id: int,
+        search: str | None,
+        tag_ids: list[int],
+    ) -> list[Flashcard]:
+        statement = select(Flashcard).where(
+            Flashcard.language_id == language_id,
+            Flashcard.category_id == category_id,
+        )
+        if search:
+            lowered_search = search.lower()
+            statement = statement.where(
+                or_(
+                    func.lower(Flashcard.term).contains(lowered_search, autoescape=True),
+                    func.lower(Flashcard.translation).contains(lowered_search, autoescape=True),
+                )
+            )
+        if tag_ids:
+            statement = (
+                statement.join(flashcard_tags)
+                .where(flashcard_tags.c.tag_id.in_(tag_ids))
+                .group_by(Flashcard.id)
+                .having(func.count(func.distinct(flashcard_tags.c.tag_id)) == len(tag_ids))
+            )
+        statement = statement.order_by(func.lower(Flashcard.term), Flashcard.id)
+        return list(self._session.scalars(statement))
 
     def duplicate_exists(
         self,

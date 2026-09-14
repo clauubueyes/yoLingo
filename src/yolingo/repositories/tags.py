@@ -20,6 +20,13 @@ class TagRepository:
     def get_by_id(self, tag_id: int) -> Tag | None:
         return self._session.get(Tag, tag_id)
 
+    def name_exists(self, *, language_id: int, name: str) -> bool:
+        statement = select(Tag.id).where(
+            Tag.language_id == language_id,
+            Tag.name == name,
+        )
+        return self._session.scalar(statement.limit(1)) is not None
+
     def create(self, *, language_id: int, name: str) -> Tag:
         tag = Tag(language_id=language_id, name=name)
         self._session.add(tag)

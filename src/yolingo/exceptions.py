@@ -44,3 +44,19 @@ class InvalidFlashcardTranslationError(Exception):
 
 class FlashcardAlreadyExistsError(Exception):
     """Raised when the same term and translation already exist in a category."""
+
+
+class TagNotFoundError(Exception):
+    """Raised when the requested tag does not exist."""
+
+
+class InvalidTagNameError(Exception):
+    """Raised when a tag name does not satisfy the domain rules."""
+
+
+class TagAlreadyExistsError(Exception):
+    """Raised when a tag name already exists in a language."""
+
+
+class TagLanguageMismatchError(Exception):
+    """Raised when a tag and flashcard belong to different languages."""
