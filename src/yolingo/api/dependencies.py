@@ -6,9 +6,11 @@ from sqlalchemy.orm import Session
 from yolingo.repositories.categories import CategoryRepository
 from yolingo.repositories.flashcards import FlashcardRepository
 from yolingo.repositories.languages import LanguageRepository
+from yolingo.repositories.tags import TagRepository
 from yolingo.services.categories import CategoryService
 from yolingo.services.flashcards import FlashcardService
 from yolingo.services.languages import LanguageService
+from yolingo.services.tags import TagService
 
 
 def get_session(request: Request):
@@ -41,3 +43,15 @@ def get_flashcard_service(session: SessionDependency) -> FlashcardService:
 
 
 FlashcardServiceDependency = Annotated[FlashcardService, Depends(get_flashcard_service)]
+
+
+def get_tag_service(session: SessionDependency) -> TagService:
+    return TagService(
+        TagRepository(session),
+        FlashcardRepository(session),
+        LanguageRepository(session),
+        CategoryRepository(session),
+    )
+
+
+TagServiceDependency = Annotated[TagService, Depends(get_tag_service)]

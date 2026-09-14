@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
 
-from yolingo.api.dependencies import FlashcardServiceDependency
+from fastapi import APIRouter, HTTPException, Query, status
+
+from yolingo.api.dependencies import FlashcardServiceDependency, TagServiceDependency
 from yolingo.exceptions import (
     CategoryLanguageMismatchError,
     CategoryNotFoundError,
@@ -9,8 +11,11 @@ from yolingo.exceptions import (
     InvalidFlashcardTermError,
     InvalidFlashcardTranslationError,
     LanguageNotFoundError,
+    TagLanguageMismatchError,
+    TagNotFoundError,
 )
 from yolingo.schemas.flashcard import FlashcardCreate, FlashcardResponse, FlashcardUpdate
+from yolingo.schemas.tag import TagId
 
 router = APIRouter(tags=["flashcards"])
 
@@ -24,6 +29,7 @@ WRITE_ERRORS = (
     InvalidFlashcardTermError,
     InvalidFlashcardTranslationError,
 )
+FILTER_ERRORS = (*CATEGORY_ERRORS, TagNotFoundError, TagLanguageMismatchError)
 
 
 def to_http_error(error: Exception) -> HTTPException:
@@ -49,6 +55,13 @@ def to_http_error(error: Exception) -> HTTPException:
             status_code=status.HTTP_409_CONFLICT,
             detail="Ya existe una flashcard con ese término y traducción en la categoría.",
         )
+    if isinstance(error, TagNotFoundError):
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="El tag no existe.")
+    if isinstance(error, TagLanguageMismatchError):
+        return HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="El tag pertenece a otro idioma.",
+        )
     if isinstance(error, InvalidFlashcardTermError):
         detail = "El término no puede estar vacío."
     else:
@@ -63,11 +76,18 @@ def to_http_error(error: Exception) -> HTTPException:
 def list_flashcards(
     language_id: int,
     category_id: int,
-    service: FlashcardServiceDependency,
+    service: TagServiceDependency,
+    search: str | None = None,
+    tag_ids: Annotated[list[TagId] | None, Query()] = None,
 ) -> list[FlashcardResponse]:
     try:
-        flashcards = service.list_flashcards(language_id=language_id, category_id=category_id)
-    except CATEGORY_ERRORS as error:
+        flashcards = service.filter_flashcards(
+            language_id=language_id,
+            category_id=category_id,
+            search=search,
+            tag_ids=tag_ids,
+        )
+    except FILTER_ERRORS as error:
         raise to_http_error(error) from error
     return [FlashcardResponse.model_validate(flashcard) for flashcard in flashcards]
 

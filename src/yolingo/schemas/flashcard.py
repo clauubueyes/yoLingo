@@ -3,6 +3,8 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
+from yolingo.schemas.tag import TagResponse
+
 
 class FlashcardContent(BaseModel):
     term: str
@@ -69,5 +71,6 @@ class FlashcardResponse(FlashcardContent):
     category_id: int
     created_at: datetime
     updated_at: datetime
+    tags: list[TagResponse]
 
     model_config = ConfigDict(from_attributes=True)
