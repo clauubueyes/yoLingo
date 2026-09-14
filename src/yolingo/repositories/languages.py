@@ -14,6 +14,9 @@ class LanguageRepository:
         statement = select(Language).order_by(func.lower(Language.name))
         return list(self._session.scalars(statement))
 
+    def get_by_id(self, language_id: int) -> Language | None:
+        return self._session.get(Language, language_id)
+
     def create(self, *, name: str, code: str, flag: str | None) -> Language:
         language = Language(name=name, code=code, flag=flag)
         self._session.add(language)

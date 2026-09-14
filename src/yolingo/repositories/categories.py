@@ -16,6 +16,20 @@ class CategoryRepository:
         )
         return list(self._session.scalars(statement))
 
+    def get_by_id(self, category_id: int) -> Category | None:
+        return self._session.get(Category, category_id)
+
+    def name_exists(self, *, language_id: int, parent_id: int | None, name: str) -> bool:
+        statement = select(Category.id).where(
+            Category.language_id == language_id,
+            Category.name == name,
+        )
+        if parent_id is None:
+            statement = statement.where(Category.parent_id.is_(None))
+        else:
+            statement = statement.where(Category.parent_id == parent_id)
+        return self._session.scalar(statement.limit(1)) is not None
+
     def create(self, *, language_id: int, name: str, parent_id: int | None) -> Category:
         category = Category(language_id=language_id, name=name, parent_id=parent_id)
         self._session.add(category)
