@@ -28,6 +28,7 @@ packages = ["src/yolingo"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
+filterwarnings = ["error"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 

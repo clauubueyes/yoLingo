@@ -1,14 +1,20 @@
 # Hoja de ruta
 
-La hoja de ruta es deliberadamente incremental. Cada fase debe quedar usable, probada y documentada antes de crecer.
+La hoja de ruta se organiza en incrementos verticales: cada entrega incluye la interfaz, el caso de uso, la persistencia necesaria y sus pruebas. La [definición del MVP](mvp.md) determina el alcance.
 
-## Próximos hitos
+## MVP
 
-1. Idiomas: creación, listado y persistencia en SQLite.
-2. Categorías y subcategorías por idioma.
-3. Flashcards con término, traducción, ejemplo, etiquetas y metadatos básicos.
-4. Sesiones de estudio y progreso.
-5. Interfaz web progresiva con HTML, CSS y JavaScript.
-6. Importación de documentos y propuestas automáticas de vocabulario.
+1. **Selector de idioma:** crear, listar y seleccionar idiomas desde la página inicial.
+2. **Organización:** navegar y crear categorías y subcategorías en la biblioteca del idioma.
+3. **Vocabulario:** crear, consultar, editar y eliminar flashcards dentro de una categoría.
+4. **Consulta:** añadir tags, buscar vocabulario y combinar filtros.
+5. **Estudio:** estudiar el conjunto filtrado mediante tarjetas barajadas y completar una sesión.
+6. **Pulido:** mejorar accesibilidad, experiencia responsive, estados vacíos y presentación del repositorio.
 
-El análisis de documentos y la integración con modelos de IA quedan fuera del MVP inicial. Se diseñarán cuando el flujo manual de biblioteca y estudio esté validado.
+## Después del MVP
+
+- Historial de estudio y repetición espaciada.
+- Cuentas de usuario y sincronización.
+- Importación y análisis de documentos.
+- Propuestas automáticas de vocabulario y categorías.
+- Evaluación de PostgreSQL, Docker y despliegue automatizado según las necesidades reales.

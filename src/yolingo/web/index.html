@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Organiza y estudia tu vocabulario con yoLingo.">
+    <title>yoLingo · Tu biblioteca de idiomas</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="yoLingo, inicio">
+        <span class="brand-mark" aria-hidden="true">yL</span>
+        <span>yoLingo</span>
+      </a>
+      <span class="header-note">Tu biblioteca de palabras</span>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Aprende a tu manera</p>
+        <h1 id="page-title">¿Qué idioma quieres practicar?</h1>
+        <p class="hero-copy">
+          Crea un espacio para cada idioma y convierte el vocabulario que te importa en
+          algo que puedas estudiar.
+        </p>
+      </section>
+
+      <section class="library" aria-labelledby="library-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Mi biblioteca</p>
+            <h2 id="library-title">Idiomas</h2>
+          </div>
+          <button class="button button-primary" id="show-form-button" type="button">
+            <span aria-hidden="true">+</span> Nuevo idioma
+          </button>
+        </div>
+
+        <form class="language-form" id="language-form" hidden>
+          <div class="form-heading">
+            <div>
+              <h3>Añade un idioma</h3>
+              <p>Podrás organizar sus categorías y vocabulario después.</p>
+            </div>
+            <button class="icon-button" id="close-form-button" type="button" aria-label="Cerrar">
+              ×
+            </button>
+          </div>
+          <div class="form-grid">
+            <label>
+              Nombre
+              <input name="name" type="text" maxlength="80" placeholder="Norwegian" required>
+            </label>
+            <label>
+              Código
+              <input name="code" type="text" maxlength="35" placeholder="nb" required>
+            </label>
+            <label>
+              Bandera <span>(opcional)</span>
+              <input name="flag" type="text" maxlength="16" placeholder="🇳🇴">
+            </label>
+          </div>
+          <div class="form-actions">
+            <p class="form-message" id="form-message" role="alert"></p>
+            <button class="button button-primary" type="submit">Crear idioma</button>
+          </div>
+        </form>
+
+        <div class="language-grid" id="language-list" aria-live="polite"></div>
+
+        <div class="empty-state" id="empty-state" hidden>
+          <div class="empty-icon" aria-hidden="true">あ</div>
+          <h3>Tu biblioteca empieza aquí</h3>
+          <p>Crea tu primer idioma para comenzar a guardar vocabulario.</p>
+          <button class="button button-secondary" id="empty-action" type="button">
+            Crear mi primer idioma
+          </button>
+        </div>
+      </section>
+
+      <section class="selection" id="selection" aria-live="polite" hidden>
+        <span class="selection-flag" id="selection-flag" aria-hidden="true"></span>
+        <div>
+          <p class="eyebrow">Idioma seleccionado</p>
+          <h2 id="selection-name"></h2>
+          <p>Tu biblioteca está preparada para organizar el vocabulario de este idioma.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>Hecho para aprender palabra a palabra.</footer>
+  </body>
+</html>
