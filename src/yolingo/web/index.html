@@ -69,6 +69,15 @@
           </div>
         </form>
 
+        <p class="loading-state" id="language-loading">Cargando tus idiomas…</p>
+        <div class="load-error" id="language-load-error" role="alert" hidden>
+          <h3>No pudimos cargar tus idiomas</h3>
+          <p>Comprueba la conexión y vuelve a intentarlo.</p>
+          <button class="retry-button" id="retry-languages-button" type="button">
+            Reintentar
+          </button>
+        </div>
+
         <div class="language-grid" id="language-list" aria-live="polite"></div>
 
         <div class="empty-state" id="empty-state" hidden>
@@ -135,6 +144,13 @@
 
         <p class="library-status" id="category-status" role="status" aria-live="polite"></p>
         <p class="loading-state" id="category-loading" hidden>Cargando categorías…</p>
+        <div class="load-error" id="category-load-error" role="alert" hidden>
+          <h3>No pudimos cargar las categorías</h3>
+          <p>La biblioteca sigue intacta. Comprueba la conexión y vuelve a intentarlo.</p>
+          <button class="retry-button" id="retry-categories-button" type="button">
+            Reintentar
+          </button>
+        </div>
 
         <div class="category-empty empty-state" id="category-empty" hidden>
           <div class="empty-icon" aria-hidden="true">Aa</div>

@@ -281,6 +281,29 @@ textarea:focus {
   margin: 0;
 }
 
+.load-error {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border: 1px dashed #d99b90;
+  border-radius: 1rem;
+  background: #fff8f6;
+}
+
+.load-error[hidden] {
+  display: none;
+}
+
+.load-error h3 {
+  margin-bottom: 0.35rem;
+  font-size: 1rem;
+}
+
+.load-error p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .language-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

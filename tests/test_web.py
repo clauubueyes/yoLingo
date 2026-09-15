@@ -23,6 +23,11 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert "Abandonar sesión" in response.text
     assert "¡Sesión completada!" in response.text
     assert "No hay flashcards para estudiar." in response.text
+    assert "Cargando tus idiomas…" in response.text
+    assert "No pudimos cargar tus idiomas" in response.text
+    assert "No pudimos cargar las categorías" in response.text
+    assert 'id="retry-languages-button"' in response.text
+    assert 'id="retry-categories-button"' in response.text
 
 
 def test_study_session_client_is_available(app: FastAPI) -> None:
@@ -56,6 +61,11 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "studySession.restart()" in response.text
     assert "new AbortController()" in response.text
     assert "currentFlashcardQuery() !== queryString" in response.text
+    assert "response.status >= 500" in response.text
+    assert "No hay flashcards con todos esos tags" in response.text
+    assert "No hay coincidencias para" in response.text
+    assert "Has abandonado la sesión de estudio." in response.text
+    assert 'submitButton.textContent = "Guardando…"' in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

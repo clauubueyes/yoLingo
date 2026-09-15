@@ -2,12 +2,15 @@ const languageList = document.querySelector("#language-list");
 const emptyState = document.querySelector("#empty-state");
 const languageForm = document.querySelector("#language-form");
 const formMessage = document.querySelector("#form-message");
+const languageLoading = document.querySelector("#language-loading");
+const languageLoadError = document.querySelector("#language-load-error");
 const selection = document.querySelector("#selection");
 const categoryLibrary = document.querySelector("#category-library");
 const categoryForm = document.querySelector("#category-form");
 const categoryFormMessage = document.querySelector("#category-form-message");
 const categoryStatus = document.querySelector("#category-status");
 const categoryLoading = document.querySelector("#category-loading");
+const categoryLoadError = document.querySelector("#category-load-error");
 const categoryEmpty = document.querySelector("#category-empty");
 const categoryContent = document.querySelector("#category-content");
 const categoryTree = document.querySelector("#category-tree");
@@ -210,7 +213,7 @@ function createCategoryRow(category, isChild = false) {
       `Eliminar ${category.name}`,
       "×",
       "category-delete",
-      () => deleteCategory(category),
+      (event) => deleteCategory(category, event.currentTarget),
     ),
   );
   return row;
@@ -289,6 +292,7 @@ function renderCategories() {
 async function loadCategories(languageId) {
   categoryLibrary.setAttribute("aria-busy", "true");
   categoryLoading.hidden = false;
+  categoryLoadError.hidden = true;
   categoryEmpty.hidden = true;
   categoryContent.hidden = true;
   categoryStatus.textContent = "";
@@ -302,7 +306,8 @@ async function loadCategories(languageId) {
     renderCategories();
   } catch (error) {
     if (selectedLanguage?.id === languageId) {
-      categoryStatus.textContent = error.message;
+      categoryStatus.textContent = "";
+      categoryLoadError.hidden = false;
     }
   } finally {
     if (selectedLanguage?.id === languageId) {
@@ -313,6 +318,7 @@ async function loadCategories(languageId) {
 }
 
 async function responseError(response, fallback) {
+  if (response.status >= 500) return fallback;
   try {
     const body = await response.json();
     return typeof body.detail === "string" ? body.detail : fallback;
@@ -326,6 +332,7 @@ async function submitCategory(event) {
   categoryFormMessage.textContent = "";
   const submitButton = categoryForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
+  submitButton.textContent = "Creando…";
   const languageId = selectedLanguage.id;
   const payload = {
     name: new FormData(categoryForm).get("name"),
@@ -355,16 +362,18 @@ async function submitCategory(event) {
     categoryFormMessage.textContent = error.message;
   } finally {
     submitButton.disabled = false;
+    submitButton.textContent = "Crear";
   }
 }
 
-async function deleteCategory(category) {
+async function deleteCategory(category, deleteButton) {
   const hasChildren = categories.some((item) => item.parent_id === category.id);
   const warning = hasChildren
     ? `¿Eliminar ${category.name} y todas sus subcategorías?`
     : `¿Eliminar ${category.name}?`;
   if (!window.confirm(warning)) return;
 
+  deleteButton.disabled = true;
   const languageId = selectedLanguage.id;
   categoryStatus.textContent = `Eliminando ${category.name}…`;
   try {
@@ -392,6 +401,8 @@ async function deleteCategory(category) {
     categoryStatus.textContent = `${category.name} se ha eliminado.`;
   } catch (error) {
     categoryStatus.textContent = error.message;
+  } finally {
+    deleteButton.disabled = false;
   }
 }
 
@@ -578,6 +589,7 @@ async function submitTag(event) {
   tagFormMessage.textContent = "";
   const submitButton = tagForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
+  submitButton.textContent = "Creando…";
   const languageId = selectedLanguage.id;
   const selectedIds = new Set(selectedFlashcardTagIds());
 
@@ -603,6 +615,7 @@ async function submitTag(event) {
     tagFormMessage.textContent = error.message;
   } finally {
     submitButton.disabled = false;
+    submitButton.textContent = "Crear tag";
   }
 }
 
@@ -611,6 +624,7 @@ async function deleteTag(tag, deleteButton) {
 
   deleteButton.disabled = true;
   const languageId = selectedLanguage.id;
+  tagStatus.textContent = `Eliminando ${tag.name}…`;
   const wasFiltering = selectedFilterTagIds.has(tag.id);
   const selectedIds = new Set(
     selectedFlashcardTagIds().filter((tagId) => tagId !== tag.id),
@@ -711,16 +725,25 @@ function renderFlashcards() {
 
   const emptyTitle = document.querySelector("#flashcard-empty-title");
   const emptyCopy = document.querySelector("#flashcard-empty-copy");
-  const hasFilters = flashcardSearch.value.trim() || selectedFilterTagIds.size > 0;
+  const search = flashcardSearch.value.trim();
+  const hasSearch = Boolean(search);
+  const hasTagFilters = selectedFilterTagIds.size > 0;
+  const hasFilters = hasSearch || hasTagFilters;
   const countLabel = flashcards.length === 1 ? "1 flashcard" : `${flashcards.length} flashcards`;
   flashcardResultsSummary.textContent = hasFilters
     ? `${countLabel} con los filtros actuales.`
     : countLabel;
   retryFlashcardsButton.hidden = true;
   startStudyButton.disabled = false;
-  if (hasFilters && flashcards.length === 0) {
-    emptyTitle.textContent = "No hay resultados";
-    emptyCopy.textContent = "Prueba con otro texto o cambia los tags seleccionados.";
+  if (flashcards.length === 0 && hasSearch && hasTagFilters) {
+    emptyTitle.textContent = "No hay coincidencias con estos filtros";
+    emptyCopy.textContent = `Prueba otro texto en lugar de “${search}” o cambia los tags.`;
+  } else if (flashcards.length === 0 && hasSearch) {
+    emptyTitle.textContent = `No hay coincidencias para “${search}”`;
+    emptyCopy.textContent = "Prueba con otro término o traducción.";
+  } else if (flashcards.length === 0 && hasTagFilters) {
+    emptyTitle.textContent = "No hay flashcards con todos esos tags";
+    emptyCopy.textContent = "Quita algún tag seleccionado para ampliar los resultados.";
   } else {
     emptyTitle.textContent = "Aún no hay flashcards";
     emptyCopy.textContent = "Crea la primera para comenzar tu vocabulario.";
@@ -843,13 +866,14 @@ async function startStudy() {
   }
 }
 
-function leaveStudy() {
+function leaveStudy(message = "") {
   studySession = null;
   studyView.hidden = true;
   hero.hidden = false;
   languageLibrary.hidden = false;
   selection.hidden = !selectedLanguage;
   categoryLibrary.hidden = !selectedLanguage;
+  flashcardStatus.textContent = message;
   startStudyButton.focus();
 }
 
@@ -918,6 +942,7 @@ async function submitFlashcard(event) {
   flashcardFormMessage.textContent = "";
   const submitButton = flashcardForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
+  submitButton.textContent = "Guardando…";
   const languageId = selectedLanguage.id;
   const categoryId = selectedCategoryId;
   const flashcardId = editingFlashcardId;
@@ -970,6 +995,7 @@ async function submitFlashcard(event) {
     flashcardFormMessage.textContent = error.message;
   } finally {
     submitButton.disabled = false;
+    submitButton.textContent = "Guardar";
   }
 }
 
@@ -1001,19 +1027,33 @@ async function deleteFlashcard(flashcard, deleteButton) {
 }
 
 async function loadLanguages() {
+  languageLibrary.setAttribute("aria-busy", "true");
+  languageLoading.hidden = false;
+  languageLoadError.hidden = true;
+  emptyState.hidden = true;
+  languageList.replaceChildren();
   try {
     const response = await fetch("/api/v1/languages");
-    if (!response.ok) throw new Error("No se pudo cargar la biblioteca.");
+    if (!response.ok) throw new Error("No pudimos cargar tus idiomas.");
     languages = await response.json();
     renderLanguages();
   } catch {
-    languageList.innerHTML = '<p class="form-message">No se pudo cargar tu biblioteca.</p>';
+    languages = [];
+    selection.hidden = true;
+    categoryLibrary.hidden = true;
+    languageLoadError.hidden = false;
+  } finally {
+    languageLoading.hidden = true;
+    languageLibrary.setAttribute("aria-busy", "false");
   }
 }
 
 async function submitLanguage(event) {
   event.preventDefault();
   formMessage.textContent = "";
+  const submitButton = languageForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = "Creando…";
   const data = new FormData(languageForm);
   const payload = {
     name: data.get("name"),
@@ -1028,8 +1068,12 @@ async function submitLanguage(event) {
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
-      const body = await response.json();
-      throw new Error(response.status === 409 ? body.detail : "Revisa los datos introducidos.");
+      throw new Error(
+        await responseError(
+          response,
+          "No se pudo crear el idioma. Revisa el nombre y el código.",
+        ),
+      );
     }
 
     const language = await response.json();
@@ -1040,6 +1084,9 @@ async function submitLanguage(event) {
     renderLanguages();
   } catch (error) {
     formMessage.textContent = error.message;
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Crear idioma";
   }
 }
 
@@ -1057,6 +1104,10 @@ document.querySelector("#show-tag-form-button").addEventListener("click", showTa
 document.querySelector("#cancel-tag-form-button").addEventListener("click", hideTagForm);
 retryTagsButton.addEventListener("click", () => {
   if (selectedLanguage) loadTags(selectedLanguage.id);
+});
+document.querySelector("#retry-languages-button").addEventListener("click", loadLanguages);
+document.querySelector("#retry-categories-button").addEventListener("click", () => {
+  if (selectedLanguage) loadCategories(selectedLanguage.id);
 });
 showFlashcardFormButton.addEventListener("click", () => {
   showFlashcardForm();
@@ -1099,9 +1150,13 @@ nextStudyCardButton.addEventListener("click", () => {
   renderStudySession();
   if (!studySession.isFinished) revealAnswerButton.focus();
 });
-document.querySelector("#abandon-study-button").addEventListener("click", leaveStudy);
-document.querySelector("#empty-study-back-button").addEventListener("click", leaveStudy);
-document.querySelector("#completed-study-back-button").addEventListener("click", leaveStudy);
+document.querySelector("#abandon-study-button").addEventListener("click", () => {
+  leaveStudy("Has abandonado la sesión de estudio.");
+});
+document.querySelector("#empty-study-back-button").addEventListener("click", () => leaveStudy());
+document.querySelector("#completed-study-back-button").addEventListener("click", () => {
+  leaveStudy("Sesión completada. Puedes estudiar este conjunto de nuevo cuando quieras.");
+});
 document.querySelector("#restart-study-button").addEventListener("click", () => {
   if (!studySession) return;
   studySession.restart();
@@ -1111,7 +1166,7 @@ document.querySelector("#restart-study-button").addEventListener("click", () => 
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (!studyView.hidden) {
-    leaveStudy();
+    leaveStudy("Has abandonado la sesión de estudio.");
   } else if (!flashcardForm.hidden) {
     hideFlashcardForm();
     showFlashcardFormButton.focus();
