@@ -76,6 +76,13 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "showFormError" in response.text
     assert 'setAttribute("aria-invalid", "true")' in response.text
     assert "fields[0]?.focus()" in response.text
+    assert "function restoreFocus" in response.text
+    assert "categoryFormReturnFocus" in response.text
+    assert "flashcardFormReturnFocus" in response.text
+    assert "restoreFocus(flashcardFormReturnFocus, showFlashcardFormButton)" in response.text
+    assert "toggleButton.dataset.tagId = tag.id" in response.text
+    assert "else if (!categoryForm.hidden)" in response.text
+    assert "else if (!languageForm.hidden)" in response.text
 
 
 def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
@@ -87,6 +94,10 @@ def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
     assert "@media (max-width: 860px)" in response.text
     assert "@media (max-width: 680px)" in response.text
     assert "outline: 3px solid var(--coral)" in response.text
+    assert ".button:active:not(:disabled)" in response.text
+    assert ".button-secondary:hover" in response.text
+    assert ".form-message:not(:empty)" in response.text
+    assert "color: var(--danger)" in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

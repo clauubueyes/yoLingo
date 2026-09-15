@@ -48,6 +48,9 @@ const revealAnswerButton = document.querySelector("#reveal-answer-button");
 const nextStudyCardButton = document.querySelector("#next-study-card-button");
 const studyEmpty = document.querySelector("#study-empty");
 const studyCompleted = document.querySelector("#study-completed");
+const showLanguageFormButton = document.querySelector("#show-form-button");
+const showCategoryFormButton = document.querySelector("#show-category-form-button");
+const showTagFormButton = document.querySelector("#show-tag-form-button");
 
 let languages = [];
 let selectedLanguage = null;
@@ -63,6 +66,14 @@ let selectedFilterTagIds = new Set();
 let flashcardSearchTimer = null;
 let studySession = null;
 let studyLoadController = null;
+let languageFormReturnFocus = showLanguageFormButton;
+let categoryFormReturnFocus = showCategoryFormButton;
+let flashcardFormReturnFocus = showFlashcardFormButton;
+
+function restoreFocus(preferredTarget, fallbackTarget) {
+  const target = preferredTarget?.isConnected ? preferredTarget : fallbackTarget;
+  target?.focus();
+}
 
 function clearFormError(form, messageElement) {
   messageElement.textContent = "";
@@ -80,7 +91,8 @@ function showFormError(form, messageElement, message, fieldNames) {
   fields[0]?.focus();
 }
 
-function showForm() {
+function showForm(trigger = showLanguageFormButton) {
+  languageFormReturnFocus = trigger;
   languageForm.hidden = false;
   clearFormError(languageForm, formMessage);
   languageForm.elements.name.focus();
@@ -168,7 +180,8 @@ function renderLanguages() {
   }
 }
 
-function showCategoryForm(parent = null) {
+function showCategoryForm(parent = null, trigger = showCategoryFormButton) {
+  categoryFormReturnFocus = trigger;
   categoryFormParentId = parent?.id ?? null;
   document.querySelector("#category-form-title").textContent = parent
     ? "Añade una subcategoría"
@@ -219,7 +232,7 @@ function createCategoryRow(category, isChild = false) {
         `Crear subcategoría dentro de ${category.name}`,
         "+",
         "category-add-child",
-        () => showCategoryForm(category),
+        (event) => showCategoryForm(category, event.currentTarget),
       ),
     );
   }
@@ -374,6 +387,9 @@ async function submitCategory(event) {
     localStorage.setItem(`yolingo:selected-category:${languageId}`, String(category.id));
     renderCategories();
     categoryStatus.textContent = `${category.name} se ha creado correctamente.`;
+    categoryTree
+      .querySelector(`[data-category-id="${category.id}"] .category-select`)
+      ?.focus();
   } catch (error) {
     showFormError(categoryForm, categoryFormMessage, error.message, ["name"]);
   } finally {
@@ -415,6 +431,13 @@ async function deleteCategory(category, deleteButton) {
     }
     renderCategories();
     categoryStatus.textContent = `${category.name} se ha eliminado.`;
+    const selectedCategoryButton = categoryTree.querySelector(
+      `[data-category-id="${selectedCategoryId}"] .category-select`,
+    );
+    restoreFocus(
+      selectedCategoryButton || categoryTree.querySelector(".category-select"),
+      showCategoryFormButton,
+    );
   } catch (error) {
     categoryStatus.textContent = error.message;
   } finally {
@@ -444,7 +467,8 @@ function resetFlashcardView({ clearFilters = false } = {}) {
   updateClearFiltersButton();
 }
 
-function showFlashcardForm(flashcard = null) {
+function showFlashcardForm(flashcard = null, trigger = showFlashcardFormButton) {
+  flashcardFormReturnFocus = trigger;
   editingFlashcardId = flashcard?.id ?? null;
   flashcardForm.reset();
   clearFormError(flashcardForm, flashcardFormMessage);
@@ -521,6 +545,7 @@ function renderTagFilters() {
     const toggleButton = document.createElement("button");
     toggleButton.className = "tag-filter-toggle";
     toggleButton.type = "button";
+    toggleButton.dataset.tagId = tag.id;
     toggleButton.textContent = tag.name;
     toggleButton.setAttribute("aria-label", `Filtrar por tag ${tag.name}`);
     toggleButton.setAttribute("aria-pressed", String(selectedFilterTagIds.has(tag.id)));
@@ -531,6 +556,7 @@ function renderTagFilters() {
         selectedFilterTagIds.add(tag.id);
       }
       renderTagFilters();
+      tagFilterList.querySelector(`[data-tag-id="${tag.id}"]`)?.focus();
       if (selectedCategoryId !== null) loadFlashcards(selectedCategoryId);
     });
 
@@ -553,7 +579,7 @@ async function loadTags(languageId) {
   tagTools.setAttribute("aria-busy", "true");
   tagStatus.textContent = "";
   retryTagsButton.hidden = true;
-  document.querySelector("#show-tag-form-button").disabled = true;
+  showTagFormButton.disabled = true;
   tagEmpty.hidden = false;
   tagEmpty.textContent = "Cargando tags…";
   try {
@@ -580,7 +606,7 @@ async function loadTags(languageId) {
   } finally {
     if (selectedLanguage?.id === languageId) {
       tagTools.setAttribute("aria-busy", "false");
-      document.querySelector("#show-tag-form-button").disabled = false;
+      showTagFormButton.disabled = false;
     }
   }
 }
@@ -589,7 +615,7 @@ function showTagForm() {
   tagForm.hidden = false;
   clearFormError(tagForm, tagFormMessage);
   tagStatus.textContent = "";
-  document.querySelector("#show-tag-form-button").hidden = true;
+  showTagFormButton.hidden = true;
   tagForm.elements.name.focus();
 }
 
@@ -597,7 +623,7 @@ function hideTagForm() {
   tagForm.hidden = true;
   tagForm.reset();
   clearFormError(tagForm, tagFormMessage);
-  document.querySelector("#show-tag-form-button").hidden = false;
+  showTagFormButton.hidden = false;
 }
 
 async function submitTag(event) {
@@ -627,6 +653,7 @@ async function submitTag(event) {
     renderTagFilters();
     renderFlashcardTagOptions(selectedIds);
     tagStatus.textContent = `${tag.name} se ha creado correctamente.`;
+    tagFilterList.querySelector(`[data-tag-id="${tag.id}"]`)?.focus();
   } catch (error) {
     showFormError(tagForm, tagFormMessage, error.message, ["name"]);
   } finally {
@@ -667,7 +694,7 @@ async function deleteTag(tag, deleteButton) {
     if (selectedLanguage?.id !== languageId) return;
     tagStatus.textContent = `${tag.name} se ha eliminado.`;
     const nextFocus = tagFilterList.querySelector(".tag-filter-toggle")
-      || document.querySelector("#show-tag-form-button");
+      || showTagFormButton;
     nextFocus.focus();
   } catch (error) {
     tagStatus.textContent = error.message;
@@ -723,7 +750,9 @@ function createFlashcardItem(flashcard) {
   editButton.type = "button";
   editButton.textContent = "Editar";
   editButton.setAttribute("aria-label", `Editar ${flashcard.term}`);
-  editButton.addEventListener("click", () => showFlashcardForm(flashcard));
+  editButton.addEventListener("click", (event) => {
+    showFlashcardForm(flashcard, event.currentTarget);
+  });
   const deleteButton = document.createElement("button");
   deleteButton.className = "flashcard-delete";
   deleteButton.type = "button";
@@ -1103,6 +1132,7 @@ async function submitLanguage(event) {
     hideForm();
     localStorage.setItem("yolingo:selected-language", String(language.id));
     renderLanguages();
+    languageList.querySelector(`[data-id="${language.id}"]`)?.focus();
   } catch (error) {
     showFormError(languageForm, formMessage, error.message, ["name", "code"]);
   } finally {
@@ -1111,18 +1141,31 @@ async function submitLanguage(event) {
   }
 }
 
-document.querySelector("#show-form-button").addEventListener("click", showForm);
-document.querySelector("#empty-action").addEventListener("click", showForm);
-document.querySelector("#close-form-button").addEventListener("click", hideForm);
-document.querySelector("#show-category-form-button").addEventListener("click", () => {
-  showCategoryForm();
+showLanguageFormButton.addEventListener("click", (event) => {
+  showForm(event.currentTarget);
 });
-document.querySelector("#category-empty-action").addEventListener("click", () => {
-  showCategoryForm();
+document.querySelector("#empty-action").addEventListener("click", (event) => {
+  showForm(event.currentTarget);
 });
-document.querySelector("#close-category-form-button").addEventListener("click", hideCategoryForm);
-document.querySelector("#show-tag-form-button").addEventListener("click", showTagForm);
-document.querySelector("#cancel-tag-form-button").addEventListener("click", hideTagForm);
+document.querySelector("#close-form-button").addEventListener("click", () => {
+  hideForm();
+  restoreFocus(languageFormReturnFocus, showLanguageFormButton);
+});
+showCategoryFormButton.addEventListener("click", (event) => {
+  showCategoryForm(null, event.currentTarget);
+});
+document.querySelector("#category-empty-action").addEventListener("click", (event) => {
+  showCategoryForm(null, event.currentTarget);
+});
+document.querySelector("#close-category-form-button").addEventListener("click", () => {
+  hideCategoryForm();
+  restoreFocus(categoryFormReturnFocus, showCategoryFormButton);
+});
+showTagFormButton.addEventListener("click", showTagForm);
+document.querySelector("#cancel-tag-form-button").addEventListener("click", () => {
+  hideTagForm();
+  showTagFormButton.focus();
+});
 retryTagsButton.addEventListener("click", () => {
   if (selectedLanguage) loadTags(selectedLanguage.id);
 });
@@ -1130,11 +1173,17 @@ document.querySelector("#retry-languages-button").addEventListener("click", load
 document.querySelector("#retry-categories-button").addEventListener("click", () => {
   if (selectedLanguage) loadCategories(selectedLanguage.id);
 });
-showFlashcardFormButton.addEventListener("click", () => {
-  showFlashcardForm();
+showFlashcardFormButton.addEventListener("click", (event) => {
+  showFlashcardForm(null, event.currentTarget);
 });
-document.querySelector("#close-flashcard-form-button").addEventListener("click", hideFlashcardForm);
-document.querySelector("#cancel-flashcard-form-button").addEventListener("click", hideFlashcardForm);
+document.querySelector("#close-flashcard-form-button").addEventListener("click", () => {
+  hideFlashcardForm();
+  restoreFocus(flashcardFormReturnFocus, showFlashcardFormButton);
+});
+document.querySelector("#cancel-flashcard-form-button").addEventListener("click", () => {
+  hideFlashcardForm();
+  restoreFocus(flashcardFormReturnFocus, showFlashcardFormButton);
+});
 [
   [languageForm, formMessage],
   [categoryForm, categoryFormMessage],
@@ -1202,10 +1251,16 @@ document.addEventListener("keydown", (event) => {
     leaveStudy("Has abandonado la sesión de estudio.");
   } else if (!flashcardForm.hidden) {
     hideFlashcardForm();
-    showFlashcardFormButton.focus();
+    restoreFocus(flashcardFormReturnFocus, showFlashcardFormButton);
   } else if (!tagForm.hidden) {
     hideTagForm();
-    document.querySelector("#show-tag-form-button").focus();
+    showTagFormButton.focus();
+  } else if (!categoryForm.hidden) {
+    hideCategoryForm();
+    restoreFocus(categoryFormReturnFocus, showCategoryFormButton);
+  } else if (!languageForm.hidden) {
+    hideForm();
+    restoreFocus(languageFormReturnFocus, showLanguageFormButton);
   }
 });
 
