@@ -9,6 +9,8 @@ def test_home_page_is_available(app: FastAPI) -> None:
 
     assert response.status_code == httpx2.codes.OK
     assert "¿Qué idioma quieres practicar?" in response.text
+    assert "Mis idiomas" in response.text
+    assert "Añadir idioma" in response.text
     assert "Categorías" in response.text
     assert "Selecciona una categoría" in response.text
     assert "Nueva flashcard" in response.text
@@ -91,6 +93,8 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "function showHomeView()" in response.text
     assert "function showLibraryView()" in response.text
     assert "function updateAppShell()" in response.text
+    assert "Idioma activo" in response.text
+    assert "showLanguageFormButton.hidden = languages.length === 0" in response.text
     assert "navStudyButton.addEventListener(\"click\", startStudy)" in response.text
 
 
@@ -110,6 +114,8 @@ def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
     assert ".app-navigation" in response.text
     assert "env(safe-area-inset-bottom)" in response.text
     assert '.app-navigation-item[aria-current="page"]' in response.text
+    assert ".language-add-action" in response.text
+    assert '.language-card[aria-pressed="true"]' in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

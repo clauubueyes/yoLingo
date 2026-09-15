@@ -166,6 +166,7 @@ function selectLanguage(language) {
   localStorage.setItem("yolingo:selected-language", String(language.id));
   document.querySelector("#selection-name").textContent = language.name;
   document.querySelector("#selection-flag").textContent = language.flag || "🌍";
+  document.querySelector("#selection-code").textContent = language.code.toUpperCase();
   showLibraryView();
   hideCategoryForm();
   hideTagForm();
@@ -177,7 +178,10 @@ function selectLanguage(language) {
   renderFlashcardTagOptions();
 
   document.querySelectorAll(".language-card").forEach((card) => {
-    card.setAttribute("aria-pressed", String(Number(card.dataset.id) === language.id));
+    const isActive = Number(card.dataset.id) === language.id;
+    card.setAttribute("aria-pressed", String(isActive));
+    card.querySelector(".card-status").hidden = !isActive;
+    card.querySelector(".card-action").textContent = isActive ? "Continuar  →" : "Abrir  →";
   });
   loadTags(language.id);
   loadCategories(language.id);
@@ -189,6 +193,7 @@ function createLanguageCard(language) {
   card.type = "button";
   card.dataset.id = language.id;
   card.setAttribute("aria-pressed", "false");
+  card.setAttribute("aria-label", `Abrir la biblioteca de ${language.name}`);
 
   const flag = document.createElement("span");
   flag.className = "card-flag";
@@ -206,12 +211,19 @@ function createLanguageCard(language) {
   code.className = "card-code";
   code.textContent = language.code;
 
+  const status = document.createElement("span");
+  status.className = "card-status";
+  status.textContent = "Idioma activo";
+  status.hidden = language.id !== selectedLanguage?.id;
+
   const action = document.createElement("span");
   action.className = "card-action";
-  action.textContent = "Abrir biblioteca →";
+  action.setAttribute("aria-hidden", "true");
+  action.textContent = language.id === selectedLanguage?.id ? "Continuar  →" : "Abrir  →";
 
-  content.append(name, code, action);
+  content.append(name, code, status);
   card.append(flag, content);
+  card.append(action);
   card.addEventListener("click", () => selectLanguage(language));
   return card;
 }
@@ -219,6 +231,7 @@ function createLanguageCard(language) {
 function renderLanguages() {
   languageList.replaceChildren(...languages.map(createLanguageCard));
   emptyState.hidden = languages.length > 0;
+  showLanguageFormButton.hidden = languages.length === 0;
 
   const selectedId = Number(localStorage.getItem("yolingo:selected-language"));
   const storedLanguage = languages.find((language) => language.id === selectedId);
