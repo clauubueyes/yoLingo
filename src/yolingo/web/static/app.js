@@ -301,7 +301,16 @@ function createActionMenu(label, actions) {
     if (event.target.closest("button")) menu.open = false;
   });
   menu.append(trigger, popover);
+  menu.addEventListener("toggle", () => {
+    if (menu.open) closeActionMenus(menu);
+  });
   return menu;
+}
+
+function closeActionMenus(except = null) {
+  document.querySelectorAll(".item-actions-menu[open]").forEach((menu) => {
+    if (menu !== except) menu.open = false;
+  });
 }
 
 function createCategoryRow(category, isChild = false) {
@@ -1379,10 +1388,17 @@ document.querySelector("#restart-study-button").addEventListener("click", () => 
   renderStudySession();
   revealAnswerButton.focus();
 });
+document.addEventListener("click", (event) => {
+  if (!event.target.closest?.(".item-actions-menu")) closeActionMenus();
+});
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (!studyView.hidden) {
     leaveStudy("Has abandonado la sesión de estudio.");
+  } else if (document.querySelector(".item-actions-menu[open]")) {
+    const menu = document.querySelector(".item-actions-menu[open]");
+    menu.open = false;
+    menu.querySelector("summary").focus();
   } else if (!flashcardForm.hidden) {
     hideFlashcardForm();
     restoreFocus(flashcardFormReturnFocus, showFlashcardFormButton);

@@ -106,6 +106,8 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert 'document.body.classList.remove("study-mode-active")' in response.text
     assert 'isCompleted ? `${total} / ${total}` : ""' in response.text
     assert 'total === 1 ? "palabra estudiada" : "palabras estudiadas"' in response.text
+    assert "function closeActionMenus" in response.text
+    assert 'menu.addEventListener("toggle"' in response.text
     assert "navStudyButton.addEventListener(\"click\", startStudy)" in response.text
 
 
@@ -135,6 +137,10 @@ def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
     assert "min-height: 100dvh" in response.text
     assert ".study-card-actions .button" in response.text
     assert "#study-active[hidden]" in response.text
+    assert "@media (max-width: 360px)" in response.text
+    assert "font-size: 1rem" in response.text
+    assert "scroll-padding-bottom" in response.text
+    assert "touch-action: manipulation" in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:
