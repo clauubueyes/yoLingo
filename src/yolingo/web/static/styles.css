@@ -910,14 +910,9 @@ textarea:focus {
   font-weight: 500;
 }
 
-.study-context,
-.study-status {
+.study-context {
   margin-bottom: 0;
   color: var(--muted);
-}
-
-.study-status:empty {
-  display: none;
 }
 
 #study-active {

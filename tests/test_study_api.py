@@ -102,6 +102,36 @@ def test_study_selection_can_be_empty(app: FastAPI) -> None:
     assert response.json() == []
 
 
+def test_study_selection_rejects_context_from_another_language(app: FastAPI) -> None:
+    language_id, category_id = create_library(app)
+    french = asyncio.run(
+        request(
+            app,
+            "POST",
+            "/api/v1/languages",
+            json={"name": "French", "code": "fr", "flag": None},
+        )
+    ).json()
+    french_category_id = create_category(app, french["id"], "Salutations")
+    french_tag = create_tag(app, french["id"], "débutant")
+
+    foreign_category = asyncio.run(
+        request(app, "GET", study_path(language_id, french_category_id))
+    )
+    foreign_tag = asyncio.run(
+        request(
+            app,
+            "GET",
+            f"{study_path(language_id, category_id)}?tag_ids={french_tag['id']}",
+        )
+    )
+
+    assert foreign_category.status_code == httpx2.codes.UNPROCESSABLE_CONTENT
+    assert foreign_category.json() == {"detail": "La categoría pertenece a otro idioma."}
+    assert foreign_tag.status_code == httpx2.codes.UNPROCESSABLE_CONTENT
+    assert foreign_tag.json() == {"detail": "El tag pertenece a otro idioma."}
+
+
 def create_library(app: FastAPI) -> tuple[int, int]:
     language = asyncio.run(
         request(

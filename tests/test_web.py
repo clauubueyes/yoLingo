@@ -54,6 +54,8 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "renderStudySession" in response.text
     assert "/study-flashcards" in response.text
     assert "studySession.restart()" in response.text
+    assert "new AbortController()" in response.text
+    assert "currentFlashcardQuery() !== queryString" in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

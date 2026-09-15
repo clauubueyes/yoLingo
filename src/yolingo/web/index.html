@@ -163,7 +163,12 @@
                   <h3 id="selected-category-name"></h3>
                 </div>
                 <div class="flashcard-heading-actions">
-                  <button class="button button-secondary" id="start-study-button" type="button">
+                  <button
+                    class="button button-secondary"
+                    id="start-study-button"
+                    type="button"
+                    aria-controls="study-view"
+                  >
                     Estudiar
                   </button>
                   <button class="button button-primary" id="show-flashcard-form-button" type="button">
@@ -308,10 +313,14 @@
           </button>
         </div>
 
-        <p class="study-status" id="study-status" role="status" aria-live="polite"></p>
-
         <div id="study-active" hidden>
-          <article class="study-card" id="study-card" tabindex="-1" aria-live="polite">
+          <article
+            class="study-card"
+            id="study-card"
+            tabindex="-1"
+            aria-live="polite"
+            aria-describedby="study-progress"
+          >
             <p class="study-term" id="study-term"></p>
             <div class="study-answer" id="study-answer" hidden>
               <p class="study-translation" id="study-translation"></p>
@@ -336,7 +345,7 @@
           <p class="study-progress" id="study-progress" aria-live="polite"></p>
         </div>
 
-        <div class="study-message" id="study-empty" hidden>
+        <div class="study-message" id="study-empty" role="status" tabindex="-1" hidden>
           <div class="empty-icon" aria-hidden="true">Aa</div>
           <h3>No hay flashcards para estudiar.</h3>
           <p>Prueba a cambiar la categoría o los filtros.</p>
@@ -345,7 +354,7 @@
           </button>
         </div>
 
-        <div class="study-message" id="study-completed" hidden>
+        <div class="study-message" id="study-completed" role="status" tabindex="-1" hidden>
           <div class="empty-icon" aria-hidden="true">✓</div>
           <h3>¡Sesión completada!</h3>
           <p id="study-completed-summary"></p>

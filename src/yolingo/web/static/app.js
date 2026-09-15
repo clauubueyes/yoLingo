@@ -38,7 +38,6 @@ const hero = document.querySelector(".hero");
 const languageLibrary = document.querySelector(".library");
 const startStudyButton = document.querySelector("#start-study-button");
 const studyView = document.querySelector("#study-view");
-const studyStatus = document.querySelector("#study-status");
 const studyActive = document.querySelector("#study-active");
 const studyCard = document.querySelector("#study-card");
 const studyAnswer = document.querySelector("#study-answer");
@@ -60,6 +59,7 @@ let availableTags = [];
 let selectedFilterTagIds = new Set();
 let flashcardSearchTimer = null;
 let studySession = null;
+let studyLoadController = null;
 
 function showForm() {
   languageForm.hidden = false;
@@ -757,14 +757,14 @@ function renderStudySession() {
   studyEmpty.hidden = !isEmpty;
   studyCompleted.hidden = !isCompleted;
   if (isEmpty) {
-    document.querySelector("#empty-study-back-button").focus();
+    studyEmpty.focus();
     return;
   }
   if (isCompleted) {
     document.querySelector("#study-completed-summary").textContent = (
       `Has estudiado ${total} ${total === 1 ? "flashcard" : "flashcards"}.`
     );
-    document.querySelector("#completed-study-back-button").focus();
+    studyCompleted.focus();
     return;
   }
 
@@ -784,33 +784,62 @@ function renderStudySession() {
   studyCard.focus();
 }
 
+function cancelStudyLoad() {
+  studyLoadController?.abort();
+  studyLoadController = null;
+  startStudyButton.removeAttribute("aria-busy");
+  startStudyButton.textContent = "Estudiar";
+}
+
 async function startStudy() {
   if (!selectedLanguage || selectedCategoryId === null) return;
   const languageId = selectedLanguage.id;
   const categoryId = selectedCategoryId;
   const queryString = currentFlashcardQuery();
+  cancelStudyLoad();
+  const controller = new AbortController();
+  studyLoadController = controller;
   startStudyButton.disabled = true;
   startStudyButton.textContent = "Preparando…";
-  flashcardStatus.textContent = "";
+  startStudyButton.setAttribute("aria-busy", "true");
+  flashcardStatus.textContent = "Preparando la sesión de estudio…";
 
   try {
     const response = await fetch(
       `/api/v1/languages/${languageId}/categories/${categoryId}/study-flashcards${queryString ? `?${queryString}` : ""}`,
+      { signal: controller.signal },
     );
-    if (!response.ok) throw new Error("No se pudo preparar la sesión de estudio.");
+    if (!response.ok) {
+      throw new Error(await responseError(response, "No se pudo preparar la sesión de estudio."));
+    }
     const cards = await response.json();
-    if (selectedLanguage?.id !== languageId || selectedCategoryId !== categoryId) return;
+    if (
+      selectedLanguage?.id !== languageId
+      || selectedCategoryId !== categoryId
+      || currentFlashcardQuery() !== queryString
+    ) return;
 
     studySession = new StudySession(cards);
     document.querySelector("#study-context").textContent = libraryContextSummary.textContent;
-    studyStatus.textContent = "";
+    flashcardStatus.textContent = "";
     showStudyView();
     renderStudySession();
   } catch (error) {
-    flashcardStatus.textContent = error.message;
+    if (
+      error.name !== "AbortError"
+      && selectedLanguage?.id === languageId
+      && selectedCategoryId === categoryId
+    ) {
+      flashcardStatus.textContent = error.message;
+      startStudyButton.focus();
+    }
   } finally {
-    startStudyButton.disabled = false;
-    startStudyButton.textContent = "Estudiar";
+    if (studyLoadController === controller) {
+      studyLoadController = null;
+      startStudyButton.disabled = false;
+      startStudyButton.removeAttribute("aria-busy");
+      startStudyButton.textContent = "Estudiar";
+    }
   }
 }
 
@@ -821,11 +850,11 @@ function leaveStudy() {
   languageLibrary.hidden = false;
   selection.hidden = !selectedLanguage;
   categoryLibrary.hidden = !selectedLanguage;
-  studyStatus.textContent = "";
   startStudyButton.focus();
 }
 
 async function loadFlashcards(categoryId) {
+  cancelStudyLoad();
   flashcardLoadVersion += 1;
   const loadVersion = flashcardLoadVersion;
   const categoryChanged = activeFlashcardCategoryId !== categoryId;
@@ -1039,6 +1068,7 @@ categoryForm.addEventListener("submit", submitCategory);
 tagForm.addEventListener("submit", submitTag);
 flashcardForm.addEventListener("submit", submitFlashcard);
 flashcardSearch.addEventListener("input", () => {
+  cancelStudyLoad();
   clearTimeout(flashcardSearchTimer);
   flashcardResultsSummary.textContent = "";
   updateClearFiltersButton();
