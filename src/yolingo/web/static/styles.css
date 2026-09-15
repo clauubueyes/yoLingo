@@ -533,6 +533,13 @@ textarea:focus {
   margin-bottom: 0.25rem;
 }
 
+.context-summary {
+  margin-bottom: 1rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
 .flashcard-search {
   margin-top: 1.25rem;
 }
@@ -566,6 +573,7 @@ textarea:focus {
 }
 
 .tag-form {
+  flex-wrap: wrap;
   margin-top: 0.8rem;
   padding-top: 0.8rem;
   border-top: 1px solid var(--line);
@@ -594,6 +602,7 @@ textarea:focus {
 
 .tag-filter-item {
   display: inline-flex;
+  max-width: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -607,13 +616,32 @@ textarea:focus {
 }
 
 .tag-filter-toggle {
+  overflow: hidden;
+  max-width: 16rem;
   padding: 0.45rem 0.75rem;
+  text-overflow: ellipsis;
   font-weight: 750;
+  white-space: nowrap;
 }
 
 .tag-filter-toggle[aria-pressed="true"] {
   color: white;
   background: var(--green);
+}
+
+.tag-filter-toggle[aria-pressed="true"]::before {
+  content: "✓ ";
+}
+
+.tag-filter-toggle:hover,
+.tag-filter-toggle:focus-visible {
+  background: rgb(220 236 159 / 48%);
+  outline: none;
+}
+
+.tag-filter-toggle[aria-pressed="true"]:hover,
+.tag-filter-toggle[aria-pressed="true"]:focus-visible {
+  background: var(--green-dark);
 }
 
 .tag-filter-delete {
@@ -632,6 +660,31 @@ textarea:focus {
   margin: 0.8rem 0 0;
 }
 
+.tag-status {
+  min-height: 0;
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.tag-status:empty {
+  margin: 0;
+}
+
+.active-filter-summary {
+  margin-top: 0.9rem;
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid var(--green);
+  border-radius: 0.4rem;
+  color: var(--muted);
+  background: white;
+  font-size: 0.85rem;
+}
+
+.active-filter-summary strong {
+  color: var(--ink);
+}
+
 .clear-filters {
   margin-top: 0.8rem;
   padding: 0;
@@ -639,6 +692,30 @@ textarea:focus {
   color: var(--green);
   background: transparent;
   font-weight: 750;
+}
+
+.clear-filters:hover,
+.clear-filters:focus-visible {
+  color: var(--green-dark);
+  text-decoration: underline;
+  outline: none;
+}
+
+.retry-button {
+  margin-top: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--green);
+  border-radius: 0.65rem;
+  color: var(--green-dark);
+  background: white;
+  font-weight: 750;
+}
+
+.retry-button:hover,
+.retry-button:focus-visible {
+  background: rgb(220 236 159 / 48%);
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 .flashcard-form {
@@ -681,6 +758,7 @@ textarea:focus {
 
 .flashcard-tag-option {
   display: inline-flex;
+  max-width: 100%;
   gap: 0.4rem;
   align-items: center;
   padding: 0.4rem 0.65rem;
@@ -688,6 +766,7 @@ textarea:focus {
   border-radius: 999px;
   background: white;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .flashcard-tag-option:has(input:checked) {
@@ -701,12 +780,14 @@ textarea:focus {
 }
 
 .flashcard-tag {
+  max-width: 100%;
   padding: 0.3rem 0.55rem;
   border-radius: 999px;
   color: var(--green-dark);
   background: var(--lime);
   font-size: 0.78rem;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .flashcard-empty {
@@ -856,6 +937,11 @@ footer {
     width: 100%;
   }
 
+  .flashcard-form .inline-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .flashcard-form-grid {
     grid-template-columns: 1fr;
   }
@@ -869,6 +955,18 @@ footer {
   .tag-form .button {
     width: 100%;
   }
+}
+
+.results-summary {
+  min-height: 1.2rem;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.results-summary:empty {
+  min-height: 0;
+  margin: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -26,6 +26,14 @@ const tagFilterList = document.querySelector("#tag-filter-list");
 const tagEmpty = document.querySelector("#tag-empty");
 const clearFiltersButton = document.querySelector("#clear-filters-button");
 const flashcardTagOptions = document.querySelector("#flashcard-tag-options");
+const tagTools = document.querySelector("#tag-tools");
+const tagStatus = document.querySelector("#tag-status");
+const retryTagsButton = document.querySelector("#retry-tags-button");
+const activeFilterSummary = document.querySelector("#active-filter-summary");
+const activeFilterDescription = document.querySelector("#active-filter-description");
+const flashcardResultsSummary = document.querySelector("#flashcard-results-summary");
+const retryFlashcardsButton = document.querySelector("#retry-flashcards-button");
+const libraryContextSummary = document.querySelector("#library-context-summary");
 
 let languages = [];
 let selectedLanguage = null;
@@ -64,6 +72,7 @@ function selectLanguage(language) {
   selection.hidden = false;
   categoryLibrary.hidden = false;
   hideCategoryForm();
+  hideTagForm();
   availableTags = [];
   selectedFilterTagIds = new Set();
   clearTimeout(flashcardSearchTimer);
@@ -217,7 +226,21 @@ function updateCategorySelection() {
   document.querySelector("#selected-category").hidden = !category;
   document.querySelector("#selected-category-name").textContent = category?.name || "";
   categoryContext.classList.toggle("has-selection", Boolean(category));
+  renderLibraryContext(category);
   return category;
+}
+
+function renderLibraryContext(category) {
+  if (!selectedLanguage || !category) {
+    libraryContextSummary.textContent = "";
+    return;
+  }
+  const parent = category.parent_id === null
+    ? null
+    : categories.find((item) => item.id === category.parent_id);
+  libraryContextSummary.textContent = [selectedLanguage.name, parent?.name, category.name]
+    .filter(Boolean)
+    .join(" → ");
 }
 
 function selectCategory(category) {
@@ -368,8 +391,10 @@ function resetFlashcardView({ clearFilters = false } = {}) {
     selectedFilterTagIds = new Set();
   }
   flashcardStatus.textContent = "";
+  flashcardResultsSummary.textContent = "";
   flashcardLoading.hidden = true;
   flashcardEmpty.hidden = true;
+  retryFlashcardsButton.hidden = true;
   flashcardList.replaceChildren();
   categoryContext.setAttribute("aria-busy", "false");
   showFlashcardFormButton.disabled = false;
@@ -434,9 +459,17 @@ function renderFlashcardTagOptions(selectedIds = new Set()) {
 }
 
 function updateClearFiltersButton() {
-  clearFiltersButton.hidden = (
-    flashcardSearch.value.trim() === "" && selectedFilterTagIds.size === 0
-  );
+  const search = flashcardSearch.value.trim();
+  const selectedTags = availableTags.filter((tag) => selectedFilterTagIds.has(tag.id));
+  const descriptions = [];
+  if (search) descriptions.push(`Texto: “${search}”`);
+  if (selectedTags.length) {
+    descriptions.push(`Tags: ${selectedTags.map((tag) => tag.name).join(" + ")}`);
+  }
+  const hasFilters = descriptions.length > 0;
+  clearFiltersButton.hidden = !hasFilters;
+  activeFilterSummary.hidden = !hasFilters;
+  activeFilterDescription.textContent = descriptions.join(" · ");
 }
 
 function renderTagFilters() {
@@ -448,6 +481,7 @@ function renderTagFilters() {
     toggleButton.className = "tag-filter-toggle";
     toggleButton.type = "button";
     toggleButton.textContent = tag.name;
+    toggleButton.setAttribute("aria-label", `Filtrar por tag ${tag.name}`);
     toggleButton.setAttribute("aria-pressed", String(selectedFilterTagIds.has(tag.id)));
     toggleButton.addEventListener("click", () => {
       if (selectedFilterTagIds.has(tag.id)) {
@@ -475,6 +509,10 @@ function renderTagFilters() {
 }
 
 async function loadTags(languageId) {
+  tagTools.setAttribute("aria-busy", "true");
+  tagStatus.textContent = "";
+  retryTagsButton.hidden = true;
+  document.querySelector("#show-tag-form-button").disabled = true;
   tagEmpty.hidden = false;
   tagEmpty.textContent = "Cargando tags…";
   try {
@@ -495,7 +533,13 @@ async function loadTags(languageId) {
       tagFilterList.replaceChildren();
       tagEmpty.hidden = false;
       tagEmpty.textContent = error.message;
+      retryTagsButton.hidden = false;
       renderFlashcardTagOptions();
+    }
+  } finally {
+    if (selectedLanguage?.id === languageId) {
+      tagTools.setAttribute("aria-busy", "false");
+      document.querySelector("#show-tag-form-button").disabled = false;
     }
   }
 }
@@ -503,6 +547,8 @@ async function loadTags(languageId) {
 function showTagForm() {
   tagForm.hidden = false;
   tagFormMessage.textContent = "";
+  tagStatus.textContent = "";
+  document.querySelector("#show-tag-form-button").hidden = true;
   tagForm.elements.name.focus();
 }
 
@@ -510,6 +556,7 @@ function hideTagForm() {
   tagForm.hidden = true;
   tagForm.reset();
   tagFormMessage.textContent = "";
+  document.querySelector("#show-tag-form-button").hidden = false;
 }
 
 async function submitTag(event) {
@@ -537,7 +584,7 @@ async function submitTag(event) {
     hideTagForm();
     renderTagFilters();
     renderFlashcardTagOptions(selectedIds);
-    flashcardStatus.textContent = `${tag.name} se ha creado correctamente.`;
+    tagStatus.textContent = `${tag.name} se ha creado correctamente.`;
   } catch (error) {
     tagFormMessage.textContent = error.message;
   } finally {
@@ -573,9 +620,13 @@ async function deleteTag(tag, deleteButton) {
     } else {
       renderFlashcards();
     }
-    flashcardStatus.textContent = `${tag.name} se ha eliminado.`;
+    if (selectedLanguage?.id !== languageId) return;
+    tagStatus.textContent = `${tag.name} se ha eliminado.`;
+    const nextFocus = tagFilterList.querySelector(".tag-filter-toggle")
+      || document.querySelector("#show-tag-form-button");
+    nextFocus.focus();
   } catch (error) {
-    flashcardStatus.textContent = error.message;
+    tagStatus.textContent = error.message;
     deleteButton.disabled = false;
   }
 }
@@ -647,6 +698,11 @@ function renderFlashcards() {
   const emptyTitle = document.querySelector("#flashcard-empty-title");
   const emptyCopy = document.querySelector("#flashcard-empty-copy");
   const hasFilters = flashcardSearch.value.trim() || selectedFilterTagIds.size > 0;
+  const countLabel = flashcards.length === 1 ? "1 flashcard" : `${flashcards.length} flashcards`;
+  flashcardResultsSummary.textContent = hasFilters
+    ? `${countLabel} con los filtros actuales.`
+    : countLabel;
+  retryFlashcardsButton.hidden = true;
   if (hasFilters && flashcards.length === 0) {
     emptyTitle.textContent = "No hay resultados";
     emptyCopy.textContent = "Prueba con otro texto o cambia los tags seleccionados.";
@@ -660,17 +716,19 @@ function renderFlashcards() {
 async function loadFlashcards(categoryId) {
   flashcardLoadVersion += 1;
   const loadVersion = flashcardLoadVersion;
+  const categoryChanged = activeFlashcardCategoryId !== categoryId;
   flashcards = [];
   flashcardList.replaceChildren();
   flashcardEmpty.hidden = true;
   flashcardStatus.textContent = "";
-  hideFlashcardForm();
+  flashcardResultsSummary.textContent = "";
+  retryFlashcardsButton.hidden = true;
+  if (categoryChanged) hideFlashcardForm();
   activeFlashcardCategoryId = categoryId;
   const languageId = selectedLanguage.id;
   categoryContext.setAttribute("aria-busy", "true");
   flashcardLoading.hidden = false;
   showFlashcardFormButton.disabled = true;
-  flashcardSearch.disabled = true;
 
   try {
     const query = new URLSearchParams();
@@ -700,6 +758,10 @@ async function loadFlashcards(categoryId) {
       && flashcardLoadVersion === loadVersion
     ) {
       flashcardStatus.textContent = error.message;
+      document.querySelector("#flashcard-empty-title").textContent = "No pudimos cargar las flashcards";
+      document.querySelector("#flashcard-empty-copy").textContent = "Comprueba la conexión e inténtalo de nuevo.";
+      flashcardEmpty.hidden = false;
+      retryFlashcardsButton.hidden = false;
     }
   } finally {
     if (
@@ -710,7 +772,6 @@ async function loadFlashcards(categoryId) {
       flashcardLoading.hidden = true;
       categoryContext.setAttribute("aria-busy", "false");
       showFlashcardFormButton.disabled = false;
-      flashcardSearch.disabled = false;
     }
   }
 }
@@ -857,6 +918,9 @@ document.querySelector("#category-empty-action").addEventListener("click", () =>
 document.querySelector("#close-category-form-button").addEventListener("click", hideCategoryForm);
 document.querySelector("#show-tag-form-button").addEventListener("click", showTagForm);
 document.querySelector("#cancel-tag-form-button").addEventListener("click", hideTagForm);
+retryTagsButton.addEventListener("click", () => {
+  if (selectedLanguage) loadTags(selectedLanguage.id);
+});
 showFlashcardFormButton.addEventListener("click", () => {
   showFlashcardForm();
 });
@@ -868,6 +932,7 @@ tagForm.addEventListener("submit", submitTag);
 flashcardForm.addEventListener("submit", submitFlashcard);
 flashcardSearch.addEventListener("input", () => {
   clearTimeout(flashcardSearchTimer);
+  flashcardResultsSummary.textContent = "";
   updateClearFiltersButton();
   if (selectedCategoryId === null) return;
   flashcardSearchTimer = setTimeout(() => loadFlashcards(selectedCategoryId), 250);
@@ -877,7 +942,23 @@ clearFiltersButton.addEventListener("click", () => {
   flashcardSearch.value = "";
   selectedFilterTagIds = new Set();
   renderTagFilters();
+  if (selectedCategoryId !== null) {
+    loadFlashcards(selectedCategoryId);
+    flashcardSearch.focus();
+  }
+});
+retryFlashcardsButton.addEventListener("click", () => {
   if (selectedCategoryId !== null) loadFlashcards(selectedCategoryId);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!flashcardForm.hidden) {
+    hideFlashcardForm();
+    showFlashcardFormButton.focus();
+  } else if (!tagForm.hidden) {
+    hideTagForm();
+    document.querySelector("#show-tag-form-button").focus();
+  }
 });
 
 loadLanguages();

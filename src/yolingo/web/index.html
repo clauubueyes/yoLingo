@@ -155,6 +155,7 @@
               <p>Elige una categoría para preparar el vocabulario que contendrá.</p>
             </div>
             <div id="selected-category" hidden>
+              <p class="context-summary" id="library-context-summary" aria-live="polite"></p>
               <div class="flashcard-heading">
                 <div>
                   <p class="eyebrow">Categoría seleccionada</p>
@@ -165,21 +166,22 @@
                 </button>
               </div>
 
-              <label class="flashcard-search">
+              <label class="flashcard-search" for="flashcard-search">
                 Buscar por término o traducción
                 <input
                   id="flashcard-search"
                   type="search"
                   placeholder="Buscar vocabulario…"
                   autocomplete="off"
+                  aria-describedby="filter-help"
                 >
               </label>
 
-              <div class="tag-tools">
+              <div class="tag-tools" id="tag-tools" aria-busy="false">
                 <div class="tag-tools-heading">
                   <div>
                     <h4>Filtrar por tags</h4>
-                    <p>Selecciona varios para exigir que aparezcan todos.</p>
+                    <p id="filter-help">Selecciona varios para exigir que aparezcan todos.</p>
                   </div>
                   <button class="button button-quiet" id="show-tag-form-button" type="button">
                     + Nuevo tag
@@ -196,8 +198,23 @@
                   </button>
                   <p class="form-message" id="tag-form-message" role="alert"></p>
                 </form>
-                <div class="tag-filter-list" id="tag-filter-list"></div>
-                <p class="tag-empty" id="tag-empty">Todavía no hay tags en este idioma.</p>
+                <div
+                  class="tag-filter-list"
+                  id="tag-filter-list"
+                  role="group"
+                  aria-label="Filtrar flashcards por tags"
+                ></div>
+                <p class="tag-empty" id="tag-empty" role="status">
+                  Todavía no hay tags en este idioma.
+                </p>
+                <button class="retry-button" id="retry-tags-button" type="button" hidden>
+                  Reintentar carga de tags
+                </button>
+                <p class="tag-status" id="tag-status" role="status" aria-live="polite"></p>
+                <div class="active-filter-summary" id="active-filter-summary" hidden>
+                  <strong>Filtros activos:</strong>
+                  <span id="active-filter-description"></span>
+                </div>
                 <button class="clear-filters" id="clear-filters-button" type="button" hidden>
                   Limpiar filtros
                 </button>
@@ -254,9 +271,18 @@
 
               <p class="library-status" id="flashcard-status" role="status" aria-live="polite"></p>
               <p class="loading-state" id="flashcard-loading" hidden>Cargando flashcards…</p>
+              <p
+                class="results-summary"
+                id="flashcard-results-summary"
+                role="status"
+                aria-live="polite"
+              ></p>
               <div class="flashcard-empty" id="flashcard-empty" hidden>
                 <h4 id="flashcard-empty-title">Aún no hay flashcards</h4>
                 <p id="flashcard-empty-copy">Crea la primera para comenzar tu vocabulario.</p>
+                <button class="retry-button" id="retry-flashcards-button" type="button" hidden>
+                  Reintentar
+                </button>
               </div>
               <div class="flashcard-list" id="flashcard-list" aria-live="polite"></div>
             </div>

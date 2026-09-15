@@ -42,4 +42,5 @@ ruff check .
 ## Estado
 
 En desarrollo. El flujo disponible permite crear y seleccionar idiomas, organizar su biblioteca
-mediante categorías y subcategorías, y gestionar flashcards con búsqueda por término o traducción.
+mediante categorías y subcategorías, gestionar flashcards, asignarles varios tags y combinar la
+búsqueda por término o traducción con filtros por tags.

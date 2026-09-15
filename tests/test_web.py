@@ -15,6 +15,8 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert "Buscar por término o traducción" in response.text
     assert "Filtrar por tags" in response.text
     assert "Nuevo tag" in response.text
+    assert "Filtros activos:" in response.text
+    assert "Reintentar carga de tags" in response.text
 
 
 def test_category_client_is_available(app: FastAPI) -> None:
@@ -27,6 +29,8 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "URLSearchParams" in response.text
     assert 'query.append("tag_ids", tagId)' in response.text
     assert '`/api/v1/flashcards/${saved.id}/tags`' in response.text
+    assert "renderLibraryContext" in response.text
+    assert "activeFlashcardCategoryId !== categoryId" in response.text
     assert 'method: "POST"' in response.text
     assert 'method: "PUT"' in response.text
     assert '"PATCH"' in response.text
