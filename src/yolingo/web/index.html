@@ -207,6 +207,9 @@
               <p>Elige una categoría para preparar el vocabulario que contendrá.</p>
             </div>
             <div id="selected-category" hidden>
+              <button class="mobile-category-back" id="mobile-category-back" type="button">
+                <span aria-hidden="true">←</span> Categorías
+              </button>
               <p class="context-summary" id="library-context-summary" aria-live="polite"></p>
               <div class="flashcard-heading">
                 <div>
@@ -239,55 +242,61 @@
                 >
               </label>
 
-              <div class="tag-tools" id="tag-tools" aria-busy="false">
-                <div class="tag-tools-heading">
-                  <div>
-                    <h4>Filtrar por tags</h4>
-                    <p id="filter-help">Selecciona varios para exigir que aparezcan todos.</p>
+              <details class="filter-panel" id="filter-panel">
+                <summary>
+                  <span>Filtros y tags</span>
+                  <span class="filter-panel-hint" id="filter-panel-hint">Ajustar</span>
+                </summary>
+                <div class="tag-tools" id="tag-tools" aria-busy="false">
+                  <div class="tag-tools-heading">
+                    <div>
+                      <h4>Filtrar por tags</h4>
+                      <p id="filter-help">Selecciona varios para exigir que aparezcan todos.</p>
+                    </div>
+                    <button class="button button-quiet" id="show-tag-form-button" type="button">
+                      + Nuevo tag
+                    </button>
                   </div>
-                  <button class="button button-quiet" id="show-tag-form-button" type="button">
-                    + Nuevo tag
+                  <form class="tag-form" id="tag-form" hidden>
+                    <label>
+                      Nombre del tag
+                      <input
+                        name="name"
+                        type="text"
+                        maxlength="80"
+                        autocomplete="off"
+                        aria-describedby="tag-form-message"
+                        required
+                      >
+                    </label>
+                    <button class="button button-quiet" id="cancel-tag-form-button" type="button">
+                      Cancelar
+                    </button>
+                    <button class="button button-primary" type="submit">Crear tag</button>
+                    <p class="form-message" id="tag-form-message" role="alert"></p>
+                  </form>
+                  <div
+                    class="tag-filter-list"
+                    id="tag-filter-list"
+                    role="group"
+                    aria-label="Filtrar flashcards por tags"
+                  ></div>
+                  <p class="tag-empty" id="tag-empty" role="status">
+                    Todavía no hay tags en este idioma.
+                  </p>
+                  <button class="retry-button" id="retry-tags-button" type="button" hidden>
+                    Reintentar carga de tags
+                  </button>
+                  <p class="tag-status" id="tag-status" role="status" aria-live="polite"></p>
+                  <div class="active-filter-summary" id="active-filter-summary" hidden>
+                    <strong>Filtros activos:</strong>
+                    <span id="active-filter-description"></span>
+                  </div>
+                  <button class="clear-filters" id="clear-filters-button" type="button" hidden>
+                    Limpiar filtros
                   </button>
                 </div>
-                <form class="tag-form" id="tag-form" hidden>
-                  <label>
-                    Nombre del tag
-                    <input
-                      name="name"
-                      type="text"
-                      maxlength="80"
-                      autocomplete="off"
-                      aria-describedby="tag-form-message"
-                      required
-                    >
-                  </label>
-                  <button class="button button-quiet" id="cancel-tag-form-button" type="button">
-                    Cancelar
-                  </button>
-                  <button class="button button-primary" type="submit">Crear tag</button>
-                  <p class="form-message" id="tag-form-message" role="alert"></p>
-                </form>
-                <div
-                  class="tag-filter-list"
-                  id="tag-filter-list"
-                  role="group"
-                  aria-label="Filtrar flashcards por tags"
-                ></div>
-                <p class="tag-empty" id="tag-empty" role="status">
-                  Todavía no hay tags en este idioma.
-                </p>
-                <button class="retry-button" id="retry-tags-button" type="button" hidden>
-                  Reintentar carga de tags
-                </button>
-                <p class="tag-status" id="tag-status" role="status" aria-live="polite"></p>
-                <div class="active-filter-summary" id="active-filter-summary" hidden>
-                  <strong>Filtros activos:</strong>
-                  <span id="active-filter-description"></span>
-                </div>
-                <button class="clear-filters" id="clear-filters-button" type="button" hidden>
-                  Limpiar filtros
-                </button>
-              </div>
+              </details>
 
               <form class="language-form flashcard-form" id="flashcard-form" hidden>
                 <div class="form-heading">

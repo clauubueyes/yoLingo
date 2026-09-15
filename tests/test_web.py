@@ -42,6 +42,9 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert 'id="nav-library-button"' in response.text
     assert 'id="nav-study-button"' in response.text
     assert 'id="header-language-button"' in response.text
+    assert 'id="mobile-category-back"' in response.text
+    assert 'class="filter-panel" id="filter-panel"' in response.text
+    assert 'id="filter-panel-hint"' in response.text
 
 
 def test_study_session_client_is_available(app: FastAPI) -> None:
@@ -95,6 +98,10 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "function updateAppShell()" in response.text
     assert "Idioma activo" in response.text
     assert "showLanguageFormButton.hidden = languages.length === 0" in response.text
+    assert "function showCategoryList()" in response.text
+    assert "function createActionMenu" in response.text
+    assert 'actions.classList.add("flashcard-item-actions")' in response.text
+    assert 'filterPanelHint.textContent = hasFilters ? "Activos" : "Ajustar"' in response.text
     assert "navStudyButton.addEventListener(\"click\", startStudy)" in response.text
 
 
@@ -116,6 +123,10 @@ def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
     assert '.app-navigation-item[aria-current="page"]' in response.text
     assert ".language-add-action" in response.text
     assert '.language-card[aria-pressed="true"]' in response.text
+    assert ".category-layout:not(.showing-category) .category-context" in response.text
+    assert ".category-layout.showing-category .category-navigation" in response.text
+    assert ".item-actions-popover" in response.text
+    assert ".filter-panel" in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

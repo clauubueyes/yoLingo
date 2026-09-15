@@ -51,6 +51,9 @@ const studyCompleted = document.querySelector("#study-completed");
 const showLanguageFormButton = document.querySelector("#show-form-button");
 const showCategoryFormButton = document.querySelector("#show-category-form-button");
 const showTagFormButton = document.querySelector("#show-tag-form-button");
+const filterPanel = document.querySelector("#filter-panel");
+const filterPanelHint = document.querySelector("#filter-panel-hint");
+const mobileCategoryBack = document.querySelector("#mobile-category-back");
 const brandHomeLink = document.querySelector("#brand-home-link");
 const headerLanguageButton = document.querySelector("#header-language-button");
 const headerLanguageFlag = document.querySelector("#header-language-flag");
@@ -63,6 +66,7 @@ let languages = [];
 let selectedLanguage = null;
 let categories = [];
 let selectedCategoryId = null;
+let isCategoryListVisible = true;
 let categoryFormParentId = null;
 let flashcards = [];
 let editingFlashcardId = null;
@@ -160,6 +164,7 @@ function hideForm() {
 function selectLanguage(language) {
   selectedLanguage = language;
   categories = [];
+  isCategoryListVisible = true;
   selectedCategoryId = Number(
     localStorage.getItem(`yolingo:selected-category:${language.id}`),
   ) || null;
@@ -267,15 +272,32 @@ function hideCategoryForm() {
   categoryFormParentId = null;
 }
 
-function createCategoryAction(label, symbol, className, handler) {
+function createCategoryAction(label, className, handler) {
   const button = document.createElement("button");
   button.className = `category-action ${className}`;
   button.type = "button";
-  button.setAttribute("aria-label", label);
-  button.title = label;
-  button.textContent = symbol;
+  button.textContent = label;
   button.addEventListener("click", handler);
   return button;
+}
+
+function createActionMenu(label, actions) {
+  const menu = document.createElement("details");
+  menu.className = "item-actions-menu";
+
+  const trigger = document.createElement("summary");
+  trigger.setAttribute("aria-label", label);
+  trigger.title = label;
+  trigger.textContent = "⋯";
+
+  const popover = document.createElement("div");
+  popover.className = "item-actions-popover";
+  popover.append(...actions);
+  popover.addEventListener("click", (event) => {
+    if (event.target.closest("button")) menu.open = false;
+  });
+  menu.append(trigger, popover);
+  return menu;
 }
 
 function createCategoryRow(category, isChild = false) {
@@ -286,30 +308,37 @@ function createCategoryRow(category, isChild = false) {
   const selectButton = document.createElement("button");
   selectButton.className = "category-select";
   selectButton.type = "button";
-  selectButton.textContent = category.name;
+  const categoryName = document.createElement("span");
+  categoryName.className = "category-select-name";
+  categoryName.textContent = category.name;
+  const categoryArrow = document.createElement("span");
+  categoryArrow.className = "category-select-arrow";
+  categoryArrow.setAttribute("aria-hidden", "true");
+  categoryArrow.textContent = "›";
+  selectButton.append(categoryName, categoryArrow);
   selectButton.setAttribute("aria-current", String(category.id === selectedCategoryId));
   selectButton.addEventListener("click", () => selectCategory(category));
   row.append(selectButton);
 
+  const actions = [];
   if (!isChild) {
-    row.append(
+    actions.push(
       createCategoryAction(
-        `Crear subcategoría dentro de ${category.name}`,
-        "+",
+        "Nueva subcategoría",
         "category-add-child",
         (event) => showCategoryForm(category, event.currentTarget),
       ),
     );
   }
 
-  row.append(
+  actions.push(
     createCategoryAction(
-      `Eliminar ${category.name}`,
-      "×",
+      "Eliminar categoría",
       "category-delete",
       (event) => deleteCategory(category, event.currentTarget),
     ),
   );
+  row.append(createActionMenu(`Acciones para ${category.name}`, actions));
   return row;
 }
 
@@ -336,6 +365,14 @@ function updateCategorySelection() {
   document.querySelector("#selected-category").hidden = !category;
   document.querySelector("#selected-category-name").textContent = category?.name || "";
   categoryContext.classList.toggle("has-selection", Boolean(category));
+  categoryContent.classList.toggle(
+    "showing-category",
+    Boolean(category) && !isCategoryListVisible,
+  );
+  categoryLibrary.classList.toggle(
+    "showing-category",
+    Boolean(category) && !isCategoryListVisible,
+  );
   renderLibraryContext(category);
   updateAppShell();
   return category;
@@ -356,12 +393,22 @@ function renderLibraryContext(category) {
 
 function selectCategory(category) {
   selectedCategoryId = category.id;
+  isCategoryListVisible = false;
   localStorage.setItem(
     `yolingo:selected-category:${selectedLanguage.id}`,
     String(category.id),
   );
   updateCategorySelection();
   loadFlashcards(category.id);
+}
+
+function showCategoryList() {
+  if (!selectedLanguage) return;
+  isCategoryListVisible = true;
+  updateCategorySelection();
+  categoryTree
+    .querySelector(`[data-category-id="${selectedCategoryId}"] .category-select`)
+    ?.focus();
 }
 
 function renderCategories() {
@@ -450,12 +497,11 @@ async function submitCategory(event) {
     categories.sort((first, second) => first.name.localeCompare(second.name));
     hideCategoryForm();
     selectedCategoryId = category.id;
+    isCategoryListVisible = false;
     localStorage.setItem(`yolingo:selected-category:${languageId}`, String(category.id));
     renderCategories();
     categoryStatus.textContent = `${category.name} se ha creado correctamente.`;
-    categoryTree
-      .querySelector(`[data-category-id="${category.id}"] .category-select`)
-      ?.focus();
+    showFlashcardFormButton.focus();
   } catch (error) {
     showFormError(categoryForm, categoryFormMessage, error.message, ["name"]);
   } finally {
@@ -493,6 +539,7 @@ async function deleteCategory(category, deleteButton) {
     categories = categories.filter((item) => !removedIds.has(item.id));
     if (removedIds.has(selectedCategoryId)) {
       selectedCategoryId = null;
+      isCategoryListVisible = true;
       localStorage.removeItem(`yolingo:selected-category:${languageId}`);
     }
     renderCategories();
@@ -601,6 +648,7 @@ function updateClearFiltersButton() {
   clearFiltersButton.hidden = !hasFilters;
   activeFilterSummary.hidden = !hasFilters;
   activeFilterDescription.textContent = descriptions.join(" · ");
+  filterPanelHint.textContent = hasFilters ? "Activos" : "Ajustar";
 }
 
 function renderTagFilters() {
@@ -678,6 +726,7 @@ async function loadTags(languageId) {
 }
 
 function showTagForm() {
+  filterPanel.open = true;
   tagForm.hidden = false;
   clearFormError(tagForm, tagFormMessage);
   tagStatus.textContent = "";
@@ -810,8 +859,6 @@ function createFlashcardItem(flashcard) {
     item.append(tags);
   }
 
-  const actions = document.createElement("div");
-  actions.className = "flashcard-item-actions";
   const editButton = document.createElement("button");
   editButton.type = "button";
   editButton.textContent = "Editar";
@@ -825,7 +872,11 @@ function createFlashcardItem(flashcard) {
   deleteButton.textContent = "Eliminar";
   deleteButton.setAttribute("aria-label", `Eliminar ${flashcard.term}`);
   deleteButton.addEventListener("click", () => deleteFlashcard(flashcard, deleteButton));
-  actions.append(editButton, deleteButton);
+  const actions = createActionMenu(
+    `Acciones para ${flashcard.term}`,
+    [editButton, deleteButton],
+  );
+  actions.classList.add("flashcard-item-actions");
   item.append(actions);
   return item;
 }
@@ -1228,6 +1279,7 @@ document.querySelector("#close-form-button").addEventListener("click", () => {
 showCategoryFormButton.addEventListener("click", (event) => {
   showCategoryForm(null, event.currentTarget);
 });
+mobileCategoryBack.addEventListener("click", showCategoryList);
 document.querySelector("#category-empty-action").addEventListener("click", (event) => {
   showCategoryForm(null, event.currentTarget);
 });
@@ -1335,6 +1387,8 @@ document.addEventListener("keydown", (event) => {
   } else if (!languageForm.hidden) {
     hideForm();
     restoreFocus(languageFormReturnFocus, showLanguageFormButton);
+  } else if (!isCategoryListVisible && selectedCategoryId !== null) {
+    showCategoryList();
   }
 });
 
