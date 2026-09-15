@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from yolingo.api.dependencies import FlashcardServiceDependency, TagServiceDependency
+from yolingo.api.dependencies import FlashcardServiceDependency
 from yolingo.exceptions import (
     CategoryLanguageMismatchError,
     CategoryNotFoundError,
@@ -14,7 +14,12 @@ from yolingo.exceptions import (
     TagLanguageMismatchError,
     TagNotFoundError,
 )
-from yolingo.schemas.flashcard import FlashcardCreate, FlashcardResponse, FlashcardUpdate
+from yolingo.schemas.flashcard import (
+    FlashcardCreate,
+    FlashcardResponse,
+    FlashcardUpdate,
+    StudyFlashcardResponse,
+)
 from yolingo.schemas.tag import TagId
 
 router = APIRouter(tags=["flashcards"])
@@ -76,7 +81,7 @@ def to_http_error(error: Exception) -> HTTPException:
 def list_flashcards(
     language_id: int,
     category_id: int,
-    service: TagServiceDependency,
+    service: FlashcardServiceDependency,
     search: str | None = None,
     tag_ids: Annotated[list[TagId] | None, Query()] = None,
 ) -> list[FlashcardResponse]:
@@ -90,6 +95,29 @@ def list_flashcards(
     except FILTER_ERRORS as error:
         raise to_http_error(error) from error
     return [FlashcardResponse.model_validate(flashcard) for flashcard in flashcards]
+
+
+@router.get(
+    "/languages/{language_id}/categories/{category_id}/study-flashcards",
+    response_model=list[StudyFlashcardResponse],
+)
+def select_study_flashcards(
+    language_id: int,
+    category_id: int,
+    service: FlashcardServiceDependency,
+    search: str | None = None,
+    tag_ids: Annotated[list[TagId] | None, Query()] = None,
+) -> list[StudyFlashcardResponse]:
+    try:
+        flashcards = service.filter_flashcards(
+            language_id=language_id,
+            category_id=category_id,
+            search=search,
+            tag_ids=tag_ids,
+        )
+    except FILTER_ERRORS as error:
+        raise to_http_error(error) from error
+    return [StudyFlashcardResponse.model_validate(flashcard) for flashcard in flashcards]
 
 
 @router.post(

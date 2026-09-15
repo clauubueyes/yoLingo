@@ -14,6 +14,7 @@ from yolingo.exceptions import (
 from yolingo.repositories.categories import CategoryRepository
 from yolingo.repositories.flashcards import FlashcardRepository
 from yolingo.repositories.languages import LanguageRepository
+from yolingo.repositories.tags import TagRepository
 from yolingo.services.flashcards import FlashcardService
 
 
@@ -22,6 +23,7 @@ def build_service(session: Session) -> FlashcardService:
         FlashcardRepository(session),
         CategoryRepository(session),
         LanguageRepository(session),
+        TagRepository(session),
     )
 
 

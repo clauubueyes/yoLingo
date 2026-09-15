@@ -74,3 +74,7 @@ class FlashcardResponse(FlashcardContent):
     tags: list[TagResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class StudyFlashcardResponse(FlashcardContent):
+    model_config = ConfigDict(from_attributes=True)

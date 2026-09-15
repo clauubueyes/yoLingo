@@ -39,6 +39,7 @@ def get_flashcard_service(session: SessionDependency) -> FlashcardService:
         FlashcardRepository(session),
         CategoryRepository(session),
         LanguageRepository(session),
+        TagRepository(session),
     )
 
 
@@ -50,7 +51,6 @@ def get_tag_service(session: SessionDependency) -> TagService:
         TagRepository(session),
         FlashcardRepository(session),
         LanguageRepository(session),
-        CategoryRepository(session),
     )
 
 

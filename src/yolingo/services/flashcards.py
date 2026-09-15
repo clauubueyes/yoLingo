@@ -6,12 +6,15 @@ from yolingo.exceptions import (
     InvalidFlashcardTermError,
     InvalidFlashcardTranslationError,
     LanguageNotFoundError,
+    TagLanguageMismatchError,
+    TagNotFoundError,
 )
 from yolingo.models.category import Category
 from yolingo.models.flashcard import Flashcard
 from yolingo.repositories.categories import CategoryRepository
 from yolingo.repositories.flashcards import FlashcardRepository
 from yolingo.repositories.languages import LanguageRepository
+from yolingo.repositories.tags import TagRepository
 
 
 class FlashcardService:
@@ -20,14 +23,40 @@ class FlashcardService:
         flashcard_repository: FlashcardRepository,
         category_repository: CategoryRepository,
         language_repository: LanguageRepository,
+        tag_repository: TagRepository,
     ) -> None:
         self._flashcards = flashcard_repository
         self._categories = category_repository
         self._languages = language_repository
+        self._tags = tag_repository
 
     def list_flashcards(self, *, language_id: int, category_id: int) -> list[Flashcard]:
+        return self.filter_flashcards(language_id=language_id, category_id=category_id)
+
+    def filter_flashcards(
+        self,
+        *,
+        language_id: int,
+        category_id: int,
+        search: str | None = None,
+        tag_ids: list[int] | None = None,
+    ) -> list[Flashcard]:
         self._require_category(language_id=language_id, category_id=category_id)
-        return self._flashcards.list_by_category(category_id)
+        unique_tag_ids = list(dict.fromkeys(tag_ids or []))
+        for tag_id in unique_tag_ids:
+            tag = self._tags.get_by_id(tag_id)
+            if tag is None:
+                raise TagNotFoundError
+            if tag.language_id != language_id:
+                raise TagLanguageMismatchError
+
+        normalized_search = search.strip() if search else None
+        return self._flashcards.filter(
+            language_id=language_id,
+            category_id=category_id,
+            search=normalized_search or None,
+            tag_ids=unique_tag_ids,
+        )
 
     def get_flashcard(self, flashcard_id: int) -> Flashcard:
         return self._require_flashcard(flashcard_id)

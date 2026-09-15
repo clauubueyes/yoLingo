@@ -1,6 +1,4 @@
 from yolingo.exceptions import (
-    CategoryLanguageMismatchError,
-    CategoryNotFoundError,
     FlashcardNotFoundError,
     InvalidTagNameError,
     LanguageNotFoundError,
@@ -10,7 +8,6 @@ from yolingo.exceptions import (
 )
 from yolingo.models.flashcard import Flashcard
 from yolingo.models.tag import Tag
-from yolingo.repositories.categories import CategoryRepository
 from yolingo.repositories.flashcards import FlashcardRepository
 from yolingo.repositories.languages import LanguageRepository
 from yolingo.repositories.tags import TagRepository
@@ -24,12 +21,10 @@ class TagService:
         tag_repository: TagRepository,
         flashcard_repository: FlashcardRepository,
         language_repository: LanguageRepository,
-        category_repository: CategoryRepository,
     ) -> None:
         self._tags = tag_repository
         self._flashcards = flashcard_repository
         self._languages = language_repository
-        self._categories = category_repository
 
     def list_tags(self, language_id: int) -> list[Tag]:
         self._require_language(language_id)
@@ -72,34 +67,6 @@ class TagService:
             self._require_same_language(flashcard, tag)
         self._flashcards.replace_tags(flashcard, tags)
         return self._flashcards.get_tags(flashcard_id)
-
-    def filter_flashcards(
-        self,
-        *,
-        language_id: int,
-        category_id: int,
-        search: str | None = None,
-        tag_ids: list[int] | None = None,
-    ) -> list[Flashcard]:
-        self._require_language(language_id)
-        category = self._categories.get_by_id(category_id)
-        if category is None:
-            raise CategoryNotFoundError
-        if category.language_id != language_id:
-            raise CategoryLanguageMismatchError
-
-        unique_tag_ids = list(dict.fromkeys(tag_ids or []))
-        for tag_id in unique_tag_ids:
-            tag = self._require_tag(tag_id)
-            if tag.language_id != language_id:
-                raise TagLanguageMismatchError
-        normalized_search = search.strip() if search else None
-        return self._flashcards.filter(
-            language_id=language_id,
-            category_id=category_id,
-            search=normalized_search or None,
-            tag_ids=unique_tag_ids,
-        )
 
     def _require_language(self, language_id: int) -> None:
         if self._languages.get_by_id(language_id) is None:

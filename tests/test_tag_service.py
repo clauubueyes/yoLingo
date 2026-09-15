@@ -16,6 +16,7 @@ from yolingo.repositories.categories import CategoryRepository
 from yolingo.repositories.flashcards import FlashcardRepository
 from yolingo.repositories.languages import LanguageRepository
 from yolingo.repositories.tags import TagRepository
+from yolingo.services.flashcards import FlashcardService
 from yolingo.services.tags import TagService
 
 
@@ -24,7 +25,15 @@ def build_service(session: Session) -> TagService:
         TagRepository(session),
         FlashcardRepository(session),
         LanguageRepository(session),
+    )
+
+
+def build_flashcard_service(session: Session) -> FlashcardService:
+    return FlashcardService(
+        FlashcardRepository(session),
         CategoryRepository(session),
+        LanguageRepository(session),
+        TagRepository(session),
     )
 
 
@@ -173,12 +182,19 @@ def test_filter_combines_category_text_and_all_selected_tags(app: FastAPI) -> No
             example=None,
             notes=None,
         )
-        service = build_service(session)
-        a1 = service.create_tag(language_id=language.id, name="A1")
-        essential = service.create_tag(language_id=language.id, name="essential")
-        service.update_flashcard_tags(flashcard_id=pronoun.id, tag_ids=[a1.id, essential.id])
-        service.update_flashcard_tags(flashcard_id=verb.id, tag_ids=[a1.id])
-        service.update_flashcard_tags(flashcard_id=other.id, tag_ids=[a1.id, essential.id])
+        tag_service = build_service(session)
+        a1 = tag_service.create_tag(language_id=language.id, name="A1")
+        essential = tag_service.create_tag(language_id=language.id, name="essential")
+        tag_service.update_flashcard_tags(
+            flashcard_id=pronoun.id,
+            tag_ids=[a1.id, essential.id],
+        )
+        tag_service.update_flashcard_tags(flashcard_id=verb.id, tag_ids=[a1.id])
+        tag_service.update_flashcard_tags(
+            flashcard_id=other.id,
+            tag_ids=[a1.id, essential.id],
+        )
+        service = build_flashcard_service(session)
 
         by_translation = service.filter_flashcards(
             language_id=language.id,
@@ -207,8 +223,8 @@ def test_filter_validates_category_and_tags_belong_to_language(app: FastAPI) -> 
     with Session(app.state.database.engine) as session:
         norwegian, category, _ = create_library(session)
         french, french_category, _ = create_library(session, language_name="French", code="fr")
-        service = build_service(session)
-        french_tag = service.create_tag(language_id=french.id, name="débutant")
+        french_tag = build_service(session).create_tag(language_id=french.id, name="débutant")
+        service = build_flashcard_service(session)
 
         with pytest.raises(CategoryNotFoundError):
             service.filter_flashcards(language_id=norwegian.id, category_id=999)
