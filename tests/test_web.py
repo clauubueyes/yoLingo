@@ -17,6 +17,16 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert "Nuevo tag" in response.text
     assert "Filtros activos:" in response.text
     assert "Reintentar carga de tags" in response.text
+    assert '<script src="/static/study-session.js" defer></script>' in response.text
+
+
+def test_study_session_client_is_available(app: FastAPI) -> None:
+    response = asyncio.run(get_response(app, "/static/study-session.js"))
+
+    assert response.status_code == httpx2.codes.OK
+    assert "class StudySession" in response.text
+    assert "revealAnswer" in response.text
+    assert "restart" in response.text
 
 
 def test_category_client_is_available(app: FastAPI) -> None:
