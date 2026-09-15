@@ -51,6 +51,13 @@ const studyCompleted = document.querySelector("#study-completed");
 const showLanguageFormButton = document.querySelector("#show-form-button");
 const showCategoryFormButton = document.querySelector("#show-category-form-button");
 const showTagFormButton = document.querySelector("#show-tag-form-button");
+const brandHomeLink = document.querySelector("#brand-home-link");
+const headerLanguageButton = document.querySelector("#header-language-button");
+const headerLanguageFlag = document.querySelector("#header-language-flag");
+const headerLanguageName = document.querySelector("#header-language-name");
+const navHomeButton = document.querySelector("#nav-home-button");
+const navLibraryButton = document.querySelector("#nav-library-button");
+const navStudyButton = document.querySelector("#nav-study-button");
 
 let languages = [];
 let selectedLanguage = null;
@@ -69,6 +76,52 @@ let studyLoadController = null;
 let languageFormReturnFocus = showLanguageFormButton;
 let categoryFormReturnFocus = showCategoryFormButton;
 let flashcardFormReturnFocus = showFlashcardFormButton;
+
+function setCurrentNavigation(item) {
+  [navHomeButton, navLibraryButton, navStudyButton].forEach((button) => {
+    if (button === item) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+  });
+}
+
+function updateAppShell() {
+  const hasLanguage = Boolean(selectedLanguage);
+  headerLanguageButton.hidden = !hasLanguage;
+  headerLanguageFlag.textContent = selectedLanguage?.flag || "🌍";
+  headerLanguageName.textContent = selectedLanguage?.name || "";
+  navLibraryButton.disabled = !hasLanguage;
+  navStudyButton.disabled = !hasLanguage || selectedCategoryId === null;
+}
+
+function showHomeView() {
+  cancelStudyLoad();
+  studySession = null;
+  studyView.hidden = true;
+  hero.hidden = false;
+  languageLibrary.hidden = false;
+  selection.hidden = true;
+  categoryLibrary.hidden = true;
+  setCurrentNavigation(navHomeButton);
+  updateAppShell();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showLibraryView() {
+  if (!selectedLanguage) return;
+  cancelStudyLoad();
+  studySession = null;
+  studyView.hidden = true;
+  hero.hidden = true;
+  languageLibrary.hidden = true;
+  selection.hidden = false;
+  categoryLibrary.hidden = false;
+  setCurrentNavigation(navLibraryButton);
+  updateAppShell();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 function restoreFocus(preferredTarget, fallbackTarget) {
   const target = preferredTarget?.isConnected ? preferredTarget : fallbackTarget;
@@ -113,8 +166,7 @@ function selectLanguage(language) {
   localStorage.setItem("yolingo:selected-language", String(language.id));
   document.querySelector("#selection-name").textContent = language.name;
   document.querySelector("#selection-flag").textContent = language.flag || "🌍";
-  selection.hidden = false;
-  categoryLibrary.hidden = false;
+  showLibraryView();
   hideCategoryForm();
   hideTagForm();
   availableTags = [];
@@ -129,7 +181,6 @@ function selectLanguage(language) {
   });
   loadTags(language.id);
   loadCategories(language.id);
-  selection.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function createLanguageCard(language) {
@@ -177,6 +228,7 @@ function renderLanguages() {
     selectedLanguage = null;
     selection.hidden = true;
     categoryLibrary.hidden = true;
+    updateAppShell();
   }
 }
 
@@ -272,6 +324,7 @@ function updateCategorySelection() {
   document.querySelector("#selected-category-name").textContent = category?.name || "";
   categoryContext.classList.toggle("has-selection", Boolean(category));
   renderLibraryContext(category);
+  updateAppShell();
   return category;
 }
 
@@ -812,6 +865,8 @@ function showStudyView() {
   selection.hidden = true;
   categoryLibrary.hidden = true;
   studyView.hidden = false;
+  setCurrentNavigation(navStudyButton);
+  updateAppShell();
   studyView.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -913,11 +968,7 @@ async function startStudy() {
 
 function leaveStudy(message = "") {
   studySession = null;
-  studyView.hidden = true;
-  hero.hidden = false;
-  languageLibrary.hidden = false;
-  selection.hidden = !selectedLanguage;
-  categoryLibrary.hidden = !selectedLanguage;
+  showLibraryView();
   flashcardStatus.textContent = message;
   startStudyButton.focus();
 }
@@ -1089,9 +1140,11 @@ async function loadLanguages() {
     renderLanguages();
   } catch {
     languages = [];
+    selectedLanguage = null;
     selection.hidden = true;
     categoryLibrary.hidden = true;
     languageLoadError.hidden = false;
+    updateAppShell();
   } finally {
     languageLoading.hidden = true;
     languageLibrary.setAttribute("aria-busy", "false");
@@ -1144,6 +1197,14 @@ async function submitLanguage(event) {
 showLanguageFormButton.addEventListener("click", (event) => {
   showForm(event.currentTarget);
 });
+brandHomeLink.addEventListener("click", (event) => {
+  event.preventDefault();
+  showHomeView();
+});
+headerLanguageButton.addEventListener("click", showLibraryView);
+navHomeButton.addEventListener("click", showHomeView);
+navLibraryButton.addEventListener("click", showLibraryView);
+navStudyButton.addEventListener("click", startStudy);
 document.querySelector("#empty-action").addEventListener("click", (event) => {
   showForm(event.currentTarget);
 });

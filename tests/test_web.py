@@ -35,6 +35,11 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert 'aria-label="Cerrar formulario de flashcard"' in response.text
     assert 'aria-describedby="tag-form-message"' in response.text
     assert 'aria-describedby="flashcard-form-message"' in response.text
+    assert 'class="app-navigation" aria-label="Navegación principal"' in response.text
+    assert 'id="nav-home-button"' in response.text
+    assert 'id="nav-library-button"' in response.text
+    assert 'id="nav-study-button"' in response.text
+    assert 'id="header-language-button"' in response.text
 
 
 def test_study_session_client_is_available(app: FastAPI) -> None:
@@ -83,6 +88,10 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "toggleButton.dataset.tagId = tag.id" in response.text
     assert "else if (!categoryForm.hidden)" in response.text
     assert "else if (!languageForm.hidden)" in response.text
+    assert "function showHomeView()" in response.text
+    assert "function showLibraryView()" in response.text
+    assert "function updateAppShell()" in response.text
+    assert "navStudyButton.addEventListener(\"click\", startStudy)" in response.text
 
 
 def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
@@ -98,6 +107,9 @@ def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
     assert ".button-secondary:hover" in response.text
     assert ".form-message:not(:empty)" in response.text
     assert "color: var(--danger)" in response.text
+    assert ".app-navigation" in response.text
+    assert "env(safe-area-inset-bottom)" in response.text
+    assert '.app-navigation-item[aria-current="page"]' in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

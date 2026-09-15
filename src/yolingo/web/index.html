@@ -12,11 +12,24 @@
   <body>
     <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="yoLingo, inicio">
+      <a class="brand" id="brand-home-link" href="/" aria-label="yoLingo, inicio">
         <span class="brand-mark" aria-hidden="true">yL</span>
         <span>yoLingo</span>
       </a>
-      <span class="header-note">Tu biblioteca de palabras</span>
+      <button
+        class="header-language"
+        id="header-language-button"
+        type="button"
+        aria-label="Abrir la biblioteca del idioma actual"
+        hidden
+      >
+        <span id="header-language-flag" aria-hidden="true"></span>
+        <span class="header-language-copy">
+          <small>Idioma actual</small>
+          <strong id="header-language-name"></strong>
+        </span>
+        <span aria-hidden="true">›</span>
+      </button>
     </header>
 
     <main id="main-content" tabindex="-1">
@@ -427,5 +440,20 @@
     </main>
 
     <footer>Hecho para aprender palabra a palabra.</footer>
+
+    <nav class="app-navigation" aria-label="Navegación principal">
+      <button class="app-navigation-item" id="nav-home-button" type="button" aria-current="page">
+        <span class="app-navigation-icon" aria-hidden="true">⌂</span>
+        <span>Inicio</span>
+      </button>
+      <button class="app-navigation-item" id="nav-library-button" type="button" disabled>
+        <span class="app-navigation-icon" aria-hidden="true">▤</span>
+        <span>Biblioteca</span>
+      </button>
+      <button class="app-navigation-item" id="nav-study-button" type="button" disabled>
+        <span class="app-navigation-icon" aria-hidden="true">◇</span>
+        <span>Estudiar</span>
+      </button>
+    </nav>
   </body>
 </html>
