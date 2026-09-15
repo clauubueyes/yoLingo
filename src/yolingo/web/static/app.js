@@ -64,16 +64,32 @@ let flashcardSearchTimer = null;
 let studySession = null;
 let studyLoadController = null;
 
+function clearFormError(form, messageElement) {
+  messageElement.textContent = "";
+  form.querySelectorAll('[aria-invalid="true"]').forEach((field) => {
+    field.removeAttribute("aria-invalid");
+  });
+}
+
+function showFormError(form, messageElement, message, fieldNames) {
+  messageElement.textContent = message;
+  const fields = fieldNames
+    .map((name) => form.elements.namedItem(name))
+    .filter(Boolean);
+  fields.forEach((field) => field.setAttribute("aria-invalid", "true"));
+  fields[0]?.focus();
+}
+
 function showForm() {
   languageForm.hidden = false;
-  formMessage.textContent = "";
+  clearFormError(languageForm, formMessage);
   languageForm.elements.name.focus();
 }
 
 function hideForm() {
   languageForm.hidden = true;
   languageForm.reset();
-  formMessage.textContent = "";
+  clearFormError(languageForm, formMessage);
 }
 
 function selectLanguage(language) {
@@ -161,7 +177,7 @@ function showCategoryForm(parent = null) {
     ? `Se creará dentro de ${parent.name}.`
     : "Crea un grupo para organizar tu vocabulario.";
   categoryForm.elements.name.placeholder = parent ? "Greetings" : "Everyday";
-  categoryFormMessage.textContent = "";
+  clearFormError(categoryForm, categoryFormMessage);
   categoryForm.hidden = false;
   categoryForm.elements.name.focus();
 }
@@ -169,7 +185,7 @@ function showCategoryForm(parent = null) {
 function hideCategoryForm() {
   categoryForm.hidden = true;
   categoryForm.reset();
-  categoryFormMessage.textContent = "";
+  clearFormError(categoryForm, categoryFormMessage);
   categoryFormParentId = null;
 }
 
@@ -329,7 +345,7 @@ async function responseError(response, fallback) {
 
 async function submitCategory(event) {
   event.preventDefault();
-  categoryFormMessage.textContent = "";
+  clearFormError(categoryForm, categoryFormMessage);
   const submitButton = categoryForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = "Creando…";
@@ -359,7 +375,7 @@ async function submitCategory(event) {
     renderCategories();
     categoryStatus.textContent = `${category.name} se ha creado correctamente.`;
   } catch (error) {
-    categoryFormMessage.textContent = error.message;
+    showFormError(categoryForm, categoryFormMessage, error.message, ["name"]);
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Crear";
@@ -431,7 +447,7 @@ function resetFlashcardView({ clearFilters = false } = {}) {
 function showFlashcardForm(flashcard = null) {
   editingFlashcardId = flashcard?.id ?? null;
   flashcardForm.reset();
-  flashcardFormMessage.textContent = "";
+  clearFormError(flashcardForm, flashcardFormMessage);
   document.querySelector("#flashcard-form-title").textContent = flashcard
     ? "Editar flashcard"
     : "Nueva flashcard";
@@ -451,7 +467,7 @@ function showFlashcardForm(flashcard = null) {
 function hideFlashcardForm() {
   flashcardForm.hidden = true;
   flashcardForm.reset();
-  flashcardFormMessage.textContent = "";
+  clearFormError(flashcardForm, flashcardFormMessage);
   editingFlashcardId = null;
 }
 
@@ -571,7 +587,7 @@ async function loadTags(languageId) {
 
 function showTagForm() {
   tagForm.hidden = false;
-  tagFormMessage.textContent = "";
+  clearFormError(tagForm, tagFormMessage);
   tagStatus.textContent = "";
   document.querySelector("#show-tag-form-button").hidden = true;
   tagForm.elements.name.focus();
@@ -580,13 +596,13 @@ function showTagForm() {
 function hideTagForm() {
   tagForm.hidden = true;
   tagForm.reset();
-  tagFormMessage.textContent = "";
+  clearFormError(tagForm, tagFormMessage);
   document.querySelector("#show-tag-form-button").hidden = false;
 }
 
 async function submitTag(event) {
   event.preventDefault();
-  tagFormMessage.textContent = "";
+  clearFormError(tagForm, tagFormMessage);
   const submitButton = tagForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = "Creando…";
@@ -612,7 +628,7 @@ async function submitTag(event) {
     renderFlashcardTagOptions(selectedIds);
     tagStatus.textContent = `${tag.name} se ha creado correctamente.`;
   } catch (error) {
-    tagFormMessage.textContent = error.message;
+    showFormError(tagForm, tagFormMessage, error.message, ["name"]);
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Crear tag";
@@ -939,7 +955,7 @@ async function loadFlashcards(categoryId) {
 
 async function submitFlashcard(event) {
   event.preventDefault();
-  flashcardFormMessage.textContent = "";
+  clearFormError(flashcardForm, flashcardFormMessage);
   const submitButton = flashcardForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = "Guardando…";
@@ -992,7 +1008,12 @@ async function submitFlashcard(event) {
       : `${saved.term} se ha creado correctamente.`;
     document.querySelector(`[data-flashcard-id="${saved.id}"]`)?.focus();
   } catch (error) {
-    flashcardFormMessage.textContent = error.message;
+    showFormError(
+      flashcardForm,
+      flashcardFormMessage,
+      error.message,
+      ["term", "translation"],
+    );
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Guardar";
@@ -1050,7 +1071,7 @@ async function loadLanguages() {
 
 async function submitLanguage(event) {
   event.preventDefault();
-  formMessage.textContent = "";
+  clearFormError(languageForm, formMessage);
   const submitButton = languageForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = "Creando…";
@@ -1083,7 +1104,7 @@ async function submitLanguage(event) {
     localStorage.setItem("yolingo:selected-language", String(language.id));
     renderLanguages();
   } catch (error) {
-    formMessage.textContent = error.message;
+    showFormError(languageForm, formMessage, error.message, ["name", "code"]);
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Crear idioma";
@@ -1114,6 +1135,18 @@ showFlashcardFormButton.addEventListener("click", () => {
 });
 document.querySelector("#close-flashcard-form-button").addEventListener("click", hideFlashcardForm);
 document.querySelector("#cancel-flashcard-form-button").addEventListener("click", hideFlashcardForm);
+[
+  [languageForm, formMessage],
+  [categoryForm, categoryFormMessage],
+  [tagForm, tagFormMessage],
+  [flashcardForm, flashcardFormMessage],
+].forEach(([form, messageElement]) => {
+  form.addEventListener("input", (event) => {
+    if (event.target.getAttribute("aria-invalid") === "true") {
+      clearFormError(form, messageElement);
+    }
+  });
+});
 languageForm.addEventListener("submit", submitLanguage);
 categoryForm.addEventListener("submit", submitCategory);
 tagForm.addEventListener("submit", submitTag);

@@ -28,6 +28,13 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert "No pudimos cargar las categorías" in response.text
     assert 'id="retry-languages-button"' in response.text
     assert 'id="retry-categories-button"' in response.text
+    assert 'class="skip-link" href="#main-content"' in response.text
+    assert '<main id="main-content" tabindex="-1">' in response.text
+    assert 'aria-label="Cerrar formulario de idioma"' in response.text
+    assert 'aria-label="Cerrar formulario de categoría"' in response.text
+    assert 'aria-label="Cerrar formulario de flashcard"' in response.text
+    assert 'aria-describedby="tag-form-message"' in response.text
+    assert 'aria-describedby="flashcard-form-message"' in response.text
 
 
 def test_study_session_client_is_available(app: FastAPI) -> None:
@@ -66,6 +73,20 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "No hay coincidencias para" in response.text
     assert "Has abandonado la sesión de estudio." in response.text
     assert 'submitButton.textContent = "Guardando…"' in response.text
+    assert "showFormError" in response.text
+    assert 'setAttribute("aria-invalid", "true")' in response.text
+    assert "fields[0]?.focus()" in response.text
+
+
+def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
+    response = asyncio.run(get_response(app, "/static/styles.css"))
+
+    assert response.status_code == httpx2.codes.OK
+    assert ".skip-link:focus" in response.text
+    assert 'input[aria-invalid="true"]' in response.text
+    assert "@media (max-width: 860px)" in response.text
+    assert "@media (max-width: 680px)" in response.text
+    assert "outline: 3px solid var(--coral)" in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

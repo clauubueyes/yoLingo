@@ -10,6 +10,7 @@
     <script src="/static/app.js" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
     <header class="site-header">
       <a class="brand" href="/" aria-label="yoLingo, inicio">
         <span class="brand-mark" aria-hidden="true">yL</span>
@@ -18,7 +19,7 @@
       <span class="header-note">Tu biblioteca de palabras</span>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <section class="hero" aria-labelledby="page-title">
         <p class="eyebrow">Aprende a tu manera</p>
         <h1 id="page-title">¿Qué idioma quieres practicar?</h1>
@@ -45,18 +46,37 @@
               <h3>Añade un idioma</h3>
               <p>Podrás organizar sus categorías y vocabulario después.</p>
             </div>
-            <button class="icon-button" id="close-form-button" type="button" aria-label="Cerrar">
+            <button
+              class="icon-button"
+              id="close-form-button"
+              type="button"
+              aria-label="Cerrar formulario de idioma"
+            >
               ×
             </button>
           </div>
           <div class="form-grid">
             <label>
               Nombre
-              <input name="name" type="text" maxlength="80" placeholder="Norwegian" required>
+              <input
+                name="name"
+                type="text"
+                maxlength="80"
+                placeholder="Norwegian"
+                aria-describedby="form-message"
+                required
+              >
             </label>
             <label>
               Código
-              <input name="code" type="text" maxlength="35" placeholder="nb" required>
+              <input
+                name="code"
+                type="text"
+                maxlength="35"
+                placeholder="nb"
+                aria-describedby="form-message"
+                required
+              >
             </label>
             <label>
               Bandera <span>(opcional)</span>
@@ -120,7 +140,7 @@
               class="icon-button"
               id="close-category-form-button"
               type="button"
-              aria-label="Cerrar"
+              aria-label="Cerrar formulario de categoría"
             >
               ×
             </button>
@@ -133,6 +153,7 @@
               maxlength="80"
               autocomplete="off"
               placeholder="Everyday"
+              aria-describedby="category-form-hint category-form-message"
               required
             >
           </label>
@@ -217,7 +238,14 @@
                 <form class="tag-form" id="tag-form" hidden>
                   <label>
                     Nombre del tag
-                    <input name="name" type="text" maxlength="80" autocomplete="off" required>
+                    <input
+                      name="name"
+                      type="text"
+                      maxlength="80"
+                      autocomplete="off"
+                      aria-describedby="tag-form-message"
+                      required
+                    >
                   </label>
                   <button class="button button-primary" type="submit">Crear tag</button>
                   <button class="button button-quiet" id="cancel-tag-form-button" type="button">
@@ -257,7 +285,7 @@
                     class="icon-button"
                     id="close-flashcard-form-button"
                     type="button"
-                    aria-label="Cerrar"
+                    aria-label="Cerrar formulario de flashcard"
                   >
                     ×
                   </button>
@@ -265,11 +293,23 @@
                 <div class="flashcard-form-grid">
                   <label>
                     Término
-                    <input name="term" type="text" autocomplete="off" required>
+                    <input
+                      name="term"
+                      type="text"
+                      autocomplete="off"
+                      aria-describedby="flashcard-form-message"
+                      required
+                    >
                   </label>
                   <label>
                     Traducción
-                    <input name="translation" type="text" autocomplete="off" required>
+                    <input
+                      name="translation"
+                      type="text"
+                      autocomplete="off"
+                      aria-describedby="flashcard-form-message"
+                      required
+                    >
                   </label>
                   <label>
                     Ejemplo <span>(opcional)</span>
