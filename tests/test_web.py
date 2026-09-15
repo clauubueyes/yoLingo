@@ -18,6 +18,11 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert "Filtros activos:" in response.text
     assert "Reintentar carga de tags" in response.text
     assert '<script src="/static/study-session.js" defer></script>' in response.text
+    assert "Modo estudio" in response.text
+    assert "Revelar respuesta" in response.text
+    assert "Abandonar sesión" in response.text
+    assert "¡Sesión completada!" in response.text
+    assert "No hay flashcards para estudiar." in response.text
 
 
 def test_study_session_client_is_available(app: FastAPI) -> None:
@@ -45,6 +50,10 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert 'method: "PUT"' in response.text
     assert '"PATCH"' in response.text
     assert 'method: "DELETE"' in response.text
+    assert "startStudy" in response.text
+    assert "renderStudySession" in response.text
+    assert "/study-flashcards" in response.text
+    assert "studySession.restart()" in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

@@ -34,6 +34,18 @@ const activeFilterDescription = document.querySelector("#active-filter-descripti
 const flashcardResultsSummary = document.querySelector("#flashcard-results-summary");
 const retryFlashcardsButton = document.querySelector("#retry-flashcards-button");
 const libraryContextSummary = document.querySelector("#library-context-summary");
+const hero = document.querySelector(".hero");
+const languageLibrary = document.querySelector(".library");
+const startStudyButton = document.querySelector("#start-study-button");
+const studyView = document.querySelector("#study-view");
+const studyStatus = document.querySelector("#study-status");
+const studyActive = document.querySelector("#study-active");
+const studyCard = document.querySelector("#study-card");
+const studyAnswer = document.querySelector("#study-answer");
+const revealAnswerButton = document.querySelector("#reveal-answer-button");
+const nextStudyCardButton = document.querySelector("#next-study-card-button");
+const studyEmpty = document.querySelector("#study-empty");
+const studyCompleted = document.querySelector("#study-completed");
 
 let languages = [];
 let selectedLanguage = null;
@@ -47,6 +59,7 @@ let flashcardLoadVersion = 0;
 let availableTags = [];
 let selectedFilterTagIds = new Set();
 let flashcardSearchTimer = null;
+let studySession = null;
 
 function showForm() {
   languageForm.hidden = false;
@@ -398,6 +411,7 @@ function resetFlashcardView({ clearFilters = false } = {}) {
   flashcardList.replaceChildren();
   categoryContext.setAttribute("aria-busy", "false");
   showFlashcardFormButton.disabled = false;
+  startStudyButton.disabled = true;
   flashcardSearch.disabled = false;
   hideFlashcardForm();
   updateClearFiltersButton();
@@ -703,6 +717,7 @@ function renderFlashcards() {
     ? `${countLabel} con los filtros actuales.`
     : countLabel;
   retryFlashcardsButton.hidden = true;
+  startStudyButton.disabled = false;
   if (hasFilters && flashcards.length === 0) {
     emptyTitle.textContent = "No hay resultados";
     emptyCopy.textContent = "Prueba con otro texto o cambia los tags seleccionados.";
@@ -711,6 +726,103 @@ function renderFlashcards() {
     emptyCopy.textContent = "Crea la primera para comenzar tu vocabulario.";
   }
   updateClearFiltersButton();
+}
+
+function currentFlashcardQuery() {
+  const query = new URLSearchParams();
+  const search = flashcardSearch.value.trim();
+  if (search) query.set("search", search);
+  [...selectedFilterTagIds]
+    .sort((first, second) => first - second)
+    .forEach((tagId) => query.append("tag_ids", tagId));
+  return query.toString();
+}
+
+function showStudyView() {
+  hero.hidden = true;
+  languageLibrary.hidden = true;
+  selection.hidden = true;
+  categoryLibrary.hidden = true;
+  studyView.hidden = false;
+  studyView.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderStudySession() {
+  const total = studySession?.progress.total || 0;
+  const isEmpty = total === 0;
+  const isCompleted = Boolean(studySession?.isFinished && !isEmpty);
+  const isActive = Boolean(studySession && !studySession.isFinished);
+
+  studyActive.hidden = !isActive;
+  studyEmpty.hidden = !isEmpty;
+  studyCompleted.hidden = !isCompleted;
+  if (isEmpty) {
+    document.querySelector("#empty-study-back-button").focus();
+    return;
+  }
+  if (isCompleted) {
+    document.querySelector("#study-completed-summary").textContent = (
+      `Has estudiado ${total} ${total === 1 ? "flashcard" : "flashcards"}.`
+    );
+    document.querySelector("#completed-study-back-button").focus();
+    return;
+  }
+
+  const card = studySession.currentCard;
+  document.querySelector("#study-term").textContent = card.term;
+  document.querySelector("#study-translation").textContent = card.translation;
+  document.querySelector("#study-example").textContent = card.example || "";
+  document.querySelector("#study-notes").textContent = card.notes || "";
+  document.querySelector("#study-example-row").hidden = !card.example;
+  document.querySelector("#study-notes-row").hidden = !card.notes;
+  studyAnswer.hidden = !studySession.isAnswerVisible;
+  revealAnswerButton.hidden = studySession.isAnswerVisible;
+  nextStudyCardButton.hidden = !studySession.isAnswerVisible;
+  document.querySelector("#study-progress").textContent = (
+    `${studySession.progress.current} / ${total}`
+  );
+  studyCard.focus();
+}
+
+async function startStudy() {
+  if (!selectedLanguage || selectedCategoryId === null) return;
+  const languageId = selectedLanguage.id;
+  const categoryId = selectedCategoryId;
+  const queryString = currentFlashcardQuery();
+  startStudyButton.disabled = true;
+  startStudyButton.textContent = "Preparando…";
+  flashcardStatus.textContent = "";
+
+  try {
+    const response = await fetch(
+      `/api/v1/languages/${languageId}/categories/${categoryId}/study-flashcards${queryString ? `?${queryString}` : ""}`,
+    );
+    if (!response.ok) throw new Error("No se pudo preparar la sesión de estudio.");
+    const cards = await response.json();
+    if (selectedLanguage?.id !== languageId || selectedCategoryId !== categoryId) return;
+
+    studySession = new StudySession(cards);
+    document.querySelector("#study-context").textContent = libraryContextSummary.textContent;
+    studyStatus.textContent = "";
+    showStudyView();
+    renderStudySession();
+  } catch (error) {
+    flashcardStatus.textContent = error.message;
+  } finally {
+    startStudyButton.disabled = false;
+    startStudyButton.textContent = "Estudiar";
+  }
+}
+
+function leaveStudy() {
+  studySession = null;
+  studyView.hidden = true;
+  hero.hidden = false;
+  languageLibrary.hidden = false;
+  selection.hidden = !selectedLanguage;
+  categoryLibrary.hidden = !selectedLanguage;
+  studyStatus.textContent = "";
+  startStudyButton.focus();
 }
 
 async function loadFlashcards(categoryId) {
@@ -729,15 +841,10 @@ async function loadFlashcards(categoryId) {
   categoryContext.setAttribute("aria-busy", "true");
   flashcardLoading.hidden = false;
   showFlashcardFormButton.disabled = true;
+  startStudyButton.disabled = true;
 
   try {
-    const query = new URLSearchParams();
-    const search = flashcardSearch.value.trim();
-    if (search) query.set("search", search);
-    [...selectedFilterTagIds]
-      .sort((first, second) => first - second)
-      .forEach((tagId) => query.append("tag_ids", tagId));
-    const queryString = query.toString();
+    const queryString = currentFlashcardQuery();
     const response = await fetch(
       `/api/v1/languages/${languageId}/categories/${categoryId}/flashcards${queryString ? `?${queryString}` : ""}`,
     );
@@ -772,6 +879,7 @@ async function loadFlashcards(categoryId) {
       flashcardLoading.hidden = true;
       categoryContext.setAttribute("aria-busy", "false");
       showFlashcardFormButton.disabled = false;
+      startStudyButton.disabled = false;
     }
   }
 }
@@ -950,9 +1058,31 @@ clearFiltersButton.addEventListener("click", () => {
 retryFlashcardsButton.addEventListener("click", () => {
   if (selectedCategoryId !== null) loadFlashcards(selectedCategoryId);
 });
+startStudyButton.addEventListener("click", startStudy);
+revealAnswerButton.addEventListener("click", () => {
+  if (!studySession?.revealAnswer()) return;
+  renderStudySession();
+  nextStudyCardButton.focus();
+});
+nextStudyCardButton.addEventListener("click", () => {
+  if (!studySession?.next()) return;
+  renderStudySession();
+  if (!studySession.isFinished) revealAnswerButton.focus();
+});
+document.querySelector("#abandon-study-button").addEventListener("click", leaveStudy);
+document.querySelector("#empty-study-back-button").addEventListener("click", leaveStudy);
+document.querySelector("#completed-study-back-button").addEventListener("click", leaveStudy);
+document.querySelector("#restart-study-button").addEventListener("click", () => {
+  if (!studySession) return;
+  studySession.restart();
+  renderStudySession();
+  revealAnswerButton.focus();
+});
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
-  if (!flashcardForm.hidden) {
+  if (!studyView.hidden) {
+    leaveStudy();
+  } else if (!flashcardForm.hidden) {
     hideFlashcardForm();
     showFlashcardFormButton.focus();
   } else if (!tagForm.hidden) {

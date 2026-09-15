@@ -162,9 +162,14 @@
                   <p class="eyebrow">Categoría seleccionada</p>
                   <h3 id="selected-category-name"></h3>
                 </div>
-                <button class="button button-primary" id="show-flashcard-form-button" type="button">
-                  <span aria-hidden="true">+</span> Nueva flashcard
-                </button>
+                <div class="flashcard-heading-actions">
+                  <button class="button button-secondary" id="start-study-button" type="button">
+                    Estudiar
+                  </button>
+                  <button class="button button-primary" id="show-flashcard-form-button" type="button">
+                    <span aria-hidden="true">+</span> Nueva flashcard
+                  </button>
+                </div>
               </div>
 
               <label class="flashcard-search" for="flashcard-search">
@@ -287,6 +292,70 @@
               </div>
               <div class="flashcard-list" id="flashcard-list" aria-live="polite"></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="study-view" id="study-view" aria-labelledby="study-title" hidden>
+        <div class="study-heading">
+          <div>
+            <p class="eyebrow">Modo estudio</p>
+            <h2 id="study-title">Repasa tus flashcards</h2>
+            <p class="study-context" id="study-context"></p>
+          </div>
+          <button class="button button-quiet" id="abandon-study-button" type="button">
+            Abandonar sesión
+          </button>
+        </div>
+
+        <p class="study-status" id="study-status" role="status" aria-live="polite"></p>
+
+        <div id="study-active" hidden>
+          <article class="study-card" id="study-card" tabindex="-1" aria-live="polite">
+            <p class="study-term" id="study-term"></p>
+            <div class="study-answer" id="study-answer" hidden>
+              <p class="study-translation" id="study-translation"></p>
+              <p class="study-detail" id="study-example-row" hidden>
+                <strong>Ejemplo</strong>
+                <span id="study-example"></span>
+              </p>
+              <p class="study-detail" id="study-notes-row" hidden>
+                <strong>Notas</strong>
+                <span id="study-notes"></span>
+              </p>
+            </div>
+            <div class="study-card-actions">
+              <button class="button button-primary" id="reveal-answer-button" type="button">
+                Revelar respuesta
+              </button>
+              <button class="button button-primary" id="next-study-card-button" type="button" hidden>
+                Siguiente
+              </button>
+            </div>
+          </article>
+          <p class="study-progress" id="study-progress" aria-live="polite"></p>
+        </div>
+
+        <div class="study-message" id="study-empty" hidden>
+          <div class="empty-icon" aria-hidden="true">Aa</div>
+          <h3>No hay flashcards para estudiar.</h3>
+          <p>Prueba a cambiar la categoría o los filtros.</p>
+          <button class="button button-secondary" id="empty-study-back-button" type="button">
+            Volver a la biblioteca
+          </button>
+        </div>
+
+        <div class="study-message" id="study-completed" hidden>
+          <div class="empty-icon" aria-hidden="true">✓</div>
+          <h3>¡Sesión completada!</h3>
+          <p id="study-completed-summary"></p>
+          <div class="study-completed-actions">
+            <button class="button button-secondary" id="completed-study-back-button" type="button">
+              Volver a la biblioteca
+            </button>
+            <button class="button button-primary" id="restart-study-button" type="button">
+              Estudiar de nuevo
+            </button>
           </div>
         </div>
       </section>

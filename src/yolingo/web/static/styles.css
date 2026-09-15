@@ -528,6 +528,12 @@ textarea:focus {
   justify-content: space-between;
 }
 
+.flashcard-heading-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
 .flashcard-heading h3,
 .flashcard-heading .eyebrow {
   margin-bottom: 0.25rem;
@@ -876,6 +882,141 @@ textarea:focus {
   background: #ffe1da;
 }
 
+.study-view {
+  margin: 1.5rem 0 4rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid rgb(255 255 255 / 75%);
+  border-radius: 1.8rem;
+  background: rgb(255 253 248 / 88%);
+  box-shadow: var(--shadow);
+}
+
+.study-view[hidden],
+.study-message[hidden] {
+  display: none;
+}
+
+.study-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.study-heading h2 {
+  margin-bottom: 0.35rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 500;
+}
+
+.study-context,
+.study-status {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.study-status:empty {
+  display: none;
+}
+
+#study-active {
+  width: min(100%, 720px);
+  margin: 2rem auto 0;
+}
+
+.study-card {
+  display: flex;
+  min-height: 380px;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 1.4rem;
+  text-align: center;
+  background: white;
+  box-shadow: 0 14px 36px rgb(25 53 47 / 9%);
+  outline: none;
+}
+
+.study-card:focus-visible {
+  outline: 3px solid rgb(220 236 159 / 80%);
+  outline-offset: 3px;
+}
+
+.study-term {
+  margin: auto 0 1.5rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.study-answer {
+  width: min(100%, 560px);
+}
+
+.study-translation {
+  margin-bottom: 1.25rem;
+  color: var(--green);
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.study-detail {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+  color: var(--muted);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.study-detail strong {
+  color: var(--ink);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.study-card-actions {
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
+
+.study-progress {
+  margin: 1rem 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.study-message {
+  padding: 4rem 1rem 2.5rem;
+  text-align: center;
+}
+
+.study-message h3 {
+  margin-bottom: 0.6rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 500;
+}
+
+.study-message p {
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+}
+
+.study-completed-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
 footer {
   padding: 1rem 2rem 2.5rem;
   text-align: center;
@@ -932,6 +1073,8 @@ footer {
   }
 
   .flashcard-heading .button,
+  .flashcard-heading-actions,
+  .flashcard-heading-actions .button,
   .flashcard-form .inline-actions,
   .flashcard-form .inline-actions .button {
     width: 100%;
@@ -953,6 +1096,22 @@ footer {
   }
 
   .tag-form .button {
+    width: 100%;
+  }
+
+  .flashcard-heading-actions,
+  .study-heading,
+  .study-completed-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .study-card {
+    min-height: 340px;
+  }
+
+  .study-heading .button,
+  .study-completed-actions .button {
     width: 100%;
   }
 }
