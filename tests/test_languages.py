@@ -2,6 +2,7 @@ import asyncio
 from typing import Any
 
 import httpx2
+import pytest
 from fastapi import FastAPI
 
 
@@ -27,17 +28,22 @@ def test_user_can_create_and_list_a_language(app: FastAPI) -> None:
     ]
 
 
-def test_duplicate_language_returns_a_conflict(app: FastAPI) -> None:
+@pytest.mark.parametrize(
+    "duplicate_payload",
+    [
+        {"name": "norwegian", "code": "nn", "flag": None},
+        {"name": "Norsk", "code": "NB", "flag": None},
+    ],
+)
+def test_duplicate_language_name_or_code_returns_a_conflict(
+    app: FastAPI,
+    duplicate_payload: dict[str, Any],
+) -> None:
     payload = {"name": "Norwegian", "code": "nb", "flag": "🇳🇴"}
     asyncio.run(request(app, "POST", "/api/v1/languages", json=payload))
 
     duplicate = asyncio.run(
-        request(
-            app,
-            "POST",
-            "/api/v1/languages",
-            json={"name": "norwegian", "code": "nn", "flag": None},
-        )
+        request(app, "POST", "/api/v1/languages", json=duplicate_payload)
     )
 
     assert duplicate.status_code == httpx2.codes.CONFLICT
