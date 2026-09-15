@@ -382,15 +382,13 @@
 
       <section class="study-view" id="study-view" aria-labelledby="study-title" hidden>
         <div class="study-heading">
-          <div>
-            <p class="eyebrow">Modo estudio</p>
-            <h2 id="study-title">Repasa tus flashcards</h2>
-            <p class="study-context" id="study-context"></p>
-          </div>
           <button class="button button-quiet" id="abandon-study-button" type="button">
-            Abandonar sesión
+            <span aria-hidden="true">←</span> Salir
           </button>
+          <h2 class="visually-hidden" id="study-title">Modo estudio</h2>
+          <p class="study-progress" id="study-progress" aria-live="polite"></p>
         </div>
+        <p class="study-context" id="study-context"></p>
 
         <div id="study-active" hidden>
           <article
@@ -421,7 +419,6 @@
               </button>
             </div>
           </article>
-          <p class="study-progress" id="study-progress" aria-live="polite"></p>
         </div>
 
         <div class="study-message" id="study-empty" role="status" tabindex="-1" hidden>
@@ -435,14 +432,14 @@
 
         <div class="study-message" id="study-completed" role="status" tabindex="-1" hidden>
           <div class="empty-icon" aria-hidden="true">✓</div>
-          <h3>¡Sesión completada!</h3>
+          <h3>Sesión completada</h3>
           <p id="study-completed-summary"></p>
           <div class="study-completed-actions">
-            <button class="button button-secondary" id="completed-study-back-button" type="button">
-              Volver a la biblioteca
-            </button>
             <button class="button button-primary" id="restart-study-button" type="button">
               Estudiar de nuevo
+            </button>
+            <button class="button button-secondary" id="completed-study-back-button" type="button">
+              Volver a la biblioteca
             </button>
           </div>
         </div>

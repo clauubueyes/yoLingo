@@ -22,8 +22,8 @@ def test_home_page_is_available(app: FastAPI) -> None:
     assert '<script src="/static/study-session.js" defer></script>' in response.text
     assert "Modo estudio" in response.text
     assert "Revelar respuesta" in response.text
-    assert "Abandonar sesión" in response.text
-    assert "¡Sesión completada!" in response.text
+    assert '<span aria-hidden="true">←</span> Salir' in response.text
+    assert "Sesión completada" in response.text
     assert "No hay flashcards para estudiar." in response.text
     assert "Cargando tus idiomas…" in response.text
     assert "No pudimos cargar tus idiomas" in response.text
@@ -102,6 +102,10 @@ def test_category_client_is_available(app: FastAPI) -> None:
     assert "function createActionMenu" in response.text
     assert 'actions.classList.add("flashcard-item-actions")' in response.text
     assert 'filterPanelHint.textContent = hasFilters ? "Activos" : "Ajustar"' in response.text
+    assert 'document.body.classList.add("study-mode-active")' in response.text
+    assert 'document.body.classList.remove("study-mode-active")' in response.text
+    assert 'isCompleted ? `${total} / ${total}` : ""' in response.text
+    assert 'total === 1 ? "palabra estudiada" : "palabras estudiadas"' in response.text
     assert "navStudyButton.addEventListener(\"click\", startStudy)" in response.text
 
 
@@ -127,6 +131,10 @@ def test_responsive_and_focus_styles_are_available(app: FastAPI) -> None:
     assert ".category-layout.showing-category .category-navigation" in response.text
     assert ".item-actions-popover" in response.text
     assert ".filter-panel" in response.text
+    assert "body.study-mode-active .app-navigation" in response.text
+    assert "min-height: 100dvh" in response.text
+    assert ".study-card-actions .button" in response.text
+    assert "#study-active[hidden]" in response.text
 
 
 async def get_response(app: FastAPI, path: str) -> httpx2.Response:

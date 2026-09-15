@@ -41,6 +41,8 @@ const hero = document.querySelector(".hero");
 const languageLibrary = document.querySelector(".library");
 const startStudyButton = document.querySelector("#start-study-button");
 const studyView = document.querySelector("#study-view");
+const studyContext = document.querySelector("#study-context");
+const studyProgress = document.querySelector("#study-progress");
 const studyActive = document.querySelector("#study-active");
 const studyCard = document.querySelector("#study-card");
 const studyAnswer = document.querySelector("#study-answer");
@@ -103,6 +105,7 @@ function updateAppShell() {
 function showHomeView() {
   cancelStudyLoad();
   studySession = null;
+  document.body.classList.remove("study-mode-active");
   studyView.hidden = true;
   hero.hidden = false;
   languageLibrary.hidden = false;
@@ -117,6 +120,7 @@ function showLibraryView() {
   if (!selectedLanguage) return;
   cancelStudyLoad();
   studySession = null;
+  document.body.classList.remove("study-mode-active");
   studyView.hidden = true;
   hero.hidden = true;
   languageLibrary.hidden = true;
@@ -929,6 +933,7 @@ function showStudyView() {
   selection.hidden = true;
   categoryLibrary.hidden = true;
   studyView.hidden = false;
+  document.body.classList.add("study-mode-active");
   setCurrentNavigation(navStudyButton);
   updateAppShell();
   studyView.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -940,16 +945,22 @@ function renderStudySession() {
   const isCompleted = Boolean(studySession?.isFinished && !isEmpty);
   const isActive = Boolean(studySession && !studySession.isFinished);
 
+  studyView.classList.toggle("is-completed", isCompleted);
+  studyView.classList.toggle("is-empty", isEmpty);
   studyActive.hidden = !isActive;
   studyEmpty.hidden = !isEmpty;
   studyCompleted.hidden = !isCompleted;
+  studyContext.hidden = !isActive;
+  studyProgress.textContent = isActive
+    ? `${studySession.progress.current} / ${total}`
+    : isCompleted ? `${total} / ${total}` : "";
   if (isEmpty) {
     studyEmpty.focus();
     return;
   }
   if (isCompleted) {
     document.querySelector("#study-completed-summary").textContent = (
-      `Has estudiado ${total} ${total === 1 ? "flashcard" : "flashcards"}.`
+      `${total} ${total === 1 ? "palabra estudiada" : "palabras estudiadas"}`
     );
     studyCompleted.focus();
     return;
@@ -965,9 +976,6 @@ function renderStudySession() {
   studyAnswer.hidden = !studySession.isAnswerVisible;
   revealAnswerButton.hidden = studySession.isAnswerVisible;
   nextStudyCardButton.hidden = !studySession.isAnswerVisible;
-  document.querySelector("#study-progress").textContent = (
-    `${studySession.progress.current} / ${total}`
-  );
   studyCard.focus();
 }
 
@@ -1007,7 +1015,7 @@ async function startStudy() {
     ) return;
 
     studySession = new StudySession(cards);
-    document.querySelector("#study-context").textContent = libraryContextSummary.textContent;
+    studyContext.textContent = libraryContextSummary.textContent;
     flashcardStatus.textContent = "";
     showStudyView();
     renderStudySession();

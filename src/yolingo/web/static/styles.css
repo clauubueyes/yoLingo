@@ -45,6 +45,34 @@ body {
   transform: translateY(0);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+body.study-mode-active {
+  padding-bottom: 0;
+  background: var(--paper);
+}
+
+body.study-mode-active .site-header,
+body.study-mode-active .app-navigation,
+body.study-mode-active footer {
+  display: none;
+}
+
+body.study-mode-active main {
+  width: 100%;
+}
+
 button,
 input,
 textarea {
@@ -1228,12 +1256,13 @@ textarea[aria-invalid="true"] {
 }
 
 .study-view {
-  margin: 1.5rem 0 4rem;
-  padding: clamp(1.25rem, 4vw, 2.5rem);
-  border: 1px solid rgb(255 255 255 / 75%);
-  border-radius: 1.8rem;
-  background: rgb(255 253 248 / 88%);
-  box-shadow: var(--shadow);
+  display: flex;
+  min-height: 100dvh;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: max(0.85rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  flex-direction: column;
+  background: var(--paper);
 }
 
 .study-view[hidden],
@@ -1243,37 +1272,53 @@ textarea[aria-invalid="true"] {
 
 .study-heading {
   display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+  min-height: 3rem;
+  gap: 0.75rem;
+  align-items: center;
   justify-content: space-between;
 }
 
-.study-heading h2 {
-  margin-bottom: 0.35rem;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 500;
+.study-heading .button {
+  min-height: 2.75rem;
+  padding-right: 0.6rem;
+  padding-left: 0.2rem;
+  box-shadow: none;
 }
 
 .study-context {
-  margin-bottom: 0;
+  overflow: hidden;
+  margin: 0.25rem auto 0;
+  padding: 0 0.5rem;
+  text-align: center;
+  text-overflow: ellipsis;
   color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 #study-active {
-  width: min(100%, 720px);
-  margin: 2rem auto 0;
+  display: flex;
+  width: 100%;
+  flex: 1;
+  margin: 0.75rem auto 0;
+  flex-direction: column;
+}
+
+#study-active[hidden] {
+  display: none;
 }
 
 .study-card {
   display: flex;
-  min-height: 380px;
-  padding: clamp(1.5rem, 5vw, 3rem);
+  min-height: calc(100dvh - 5.75rem);
+  padding: clamp(1.25rem, 6vw, 3rem);
+  flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line);
-  border-radius: 1.4rem;
+  border-radius: 1.5rem;
   text-align: center;
   background: white;
   box-shadow: 0 14px 36px rgb(25 53 47 / 9%);
@@ -1286,7 +1331,7 @@ textarea[aria-invalid="true"] {
 }
 
 .study-term {
-  margin: auto 0 1.5rem;
+  margin: auto 0 1.75rem;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(2rem, 7vw, 3.5rem);
   line-height: 1.1;
@@ -1295,6 +1340,8 @@ textarea[aria-invalid="true"] {
 
 .study-answer {
   width: min(100%, 560px);
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--line);
 }
 
 .study-translation {
@@ -1322,21 +1369,32 @@ textarea[aria-invalid="true"] {
 }
 
 .study-card-actions {
+  width: min(100%, 22rem);
   margin-top: auto;
   padding-top: 1.5rem;
 }
 
+.study-card-actions .button {
+  width: 100%;
+  min-height: 3.5rem;
+}
+
 .study-progress {
-  margin: 1rem 0 0;
-  text-align: center;
+  min-width: 4rem;
+  margin: 0;
+  text-align: right;
   color: var(--muted);
   font-size: 0.95rem;
   font-weight: 800;
 }
 
 .study-message {
-  padding: 4rem 1rem 2.5rem;
+  display: grid;
+  min-height: calc(100dvh - 4rem);
+  padding: 2rem 1rem;
+  place-content: center;
   text-align: center;
+  outline: none;
 }
 
 .study-message h3 {
@@ -1352,9 +1410,10 @@ textarea[aria-invalid="true"] {
 }
 
 .study-completed-actions {
-  display: flex;
+  display: grid;
+  width: min(100%, 22rem);
   gap: 0.75rem;
-  justify-content: center;
+  margin: 0 auto;
 }
 
 .brand:focus-visible,
@@ -1461,6 +1520,10 @@ footer {
     padding: 1.2rem;
   }
 
+  .study-view {
+    padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  }
+
   .selection {
     padding: 0.9rem 1rem;
   }
@@ -1534,17 +1597,15 @@ footer {
   }
 
   .flashcard-heading-actions,
-  .study-heading,
   .study-completed-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
   .study-card {
-    min-height: 340px;
+    min-height: calc(100dvh - 5.25rem);
   }
 
-  .study-heading .button,
   .study-completed-actions .button {
     width: 100%;
   }
@@ -1575,6 +1636,15 @@ footer {
 
   .language-grid {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .study-view {
+    min-height: 100dvh;
+    padding: 1.5rem 2rem 2rem;
+  }
+
+  .study-card {
+    min-height: min(72dvh, 650px);
   }
 
   .app-navigation {
