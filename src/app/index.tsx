@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -28,16 +29,18 @@ export default function HomeScreen() {
             </ThemedText>
           </ThemedView>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.cta,
-              { backgroundColor: theme.accent },
-              pressed && styles.ctaPressed,
-            ]}>
-            <ThemedText type="smallBold" style={styles.ctaLabel}>
-              Empezar
-            </ThemedText>
-          </Pressable>
+          <Link href="/select-language" asChild>
+            <Pressable
+              style={({ pressed }) => [
+                styles.cta,
+                { backgroundColor: theme.accent },
+                pressed && styles.ctaPressed,
+              ]}>
+              <ThemedText type="smallBold" style={styles.ctaLabel}>
+                Empezar
+              </ThemedText>
+            </Pressable>
+          </Link>
         </ThemedView>
       </SafeAreaView>
     </ThemedView>
