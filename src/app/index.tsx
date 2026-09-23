@@ -1,12 +1,16 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+const LOGO_ASPECT_RATIO = 62 / 53;
+const MASCOT_ASPECT_RATIO = 307 / 246;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -17,48 +21,134 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.content}>
-          <ThemedView style={styles.hero}>
-            <ThemedText type="title" style={[styles.brand, { color: theme.accent }]}>
-              yoLingo
-            </ThemedText>
+        <ScrollView
+          alwaysBounceVertical={false}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.brand}>
+            <Image
+              accessible={false}
+              contentFit="contain"
+              source={require('@/assets/images/welcome/logo.png')}
+              style={styles.logo}
+            />
+            <ThemedText style={styles.brandName}>yoLingo</ThemedText>
+          </View>
 
-            <ThemedText type="subtitle" style={styles.welcome}>
-              Bienvenido
-            </ThemedText>
+          <View style={styles.mainContent}>
+            <View style={styles.mascotScene}>
+              <View
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                style={[styles.speechBubble, styles.hiBubble]}>
+                <ThemedText style={[styles.bubbleText, { color: theme.decorationPurple }]}>
+                  Hi!
+                </ThemedText>
+              </View>
 
-            <ThemedText themeColor="textSecondary" style={styles.description}>
-              La aplicación que te ayuda a aprender y practicar idiomas con rutas
-              adaptadas a cada lengua.
-            </ThemedText>
-          </ThemedView>
+              <View
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                style={[styles.speechBubble, styles.kanaBubble]}>
+                <ThemedText style={[styles.kanaText, { color: theme.decorationPurple }]}>
+                  あ
+                </ThemedText>
+              </View>
 
-          <Pressable
-            accessibilityRole="button"
-            onBlur={() => setIsFocused(false)}
-            onFocus={() => setIsFocused(true)}
-            onHoverIn={() => setIsHovered(true)}
-            onHoverOut={() => setIsHovered(false)}
-            onPress={() => router.push('/select-language')}
-            style={({ pressed }) => [
-              styles.cta,
-              {
-                backgroundColor: pressed
-                  ? theme.accentPressed
-                  : isHovered
-                    ? theme.accentHover
-                    : theme.accent,
-                borderColor: isFocused ? theme.focusRing : 'transparent',
-              },
-              pressed && styles.ctaPressed,
-            ]}>
-            <ThemedText
-              type="smallBold"
-              style={[styles.ctaLabel, { color: theme.accentText }]}>
-              Empezar
+              <View
+                style={[
+                  styles.decorationDot,
+                  styles.orangeDot,
+                  { backgroundColor: theme.decorationOrange },
+                ]}
+              />
+              <View
+                style={[
+                  styles.decorationDot,
+                  styles.purpleDot,
+                  { backgroundColor: theme.decorationPurple },
+                ]}
+              />
+              <View
+                style={[
+                  styles.decorationDot,
+                  styles.yellowDot,
+                  { backgroundColor: theme.decorationYellow },
+                ]}
+              />
+              <View
+                style={[
+                  styles.decorationDot,
+                  styles.smallYellowDot,
+                  { backgroundColor: theme.decorationYellow },
+                ]}
+              />
+              <View
+                style={[
+                  styles.decorationDot,
+                  styles.mintDot,
+                  { backgroundColor: theme.decorationMint },
+                ]}
+              />
+
+              <Image
+                accessibilityLabel="Mascota de yoLingo"
+                contentFit="contain"
+                source={require('@/assets/images/welcome/mascot.png')}
+                style={styles.mascot}
+              />
+            </View>
+
+            <View style={styles.introduction}>
+              <ThemedText style={styles.headline}>
+                Aprende idiomas{`\n`}a tu manera
+              </ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.description}>
+                Explora, practica y guarda las palabras{`\n`}que quieres recordar. A tu ritmo.
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.footer}>
+            <View
+              style={[
+                styles.ctaShadow,
+                { backgroundColor: theme.accentShadow },
+              ]}>
+              <Pressable
+                accessibilityRole="button"
+                onBlur={() => setIsFocused(false)}
+                onFocus={() => setIsFocused(true)}
+                onHoverIn={() => setIsHovered(true)}
+                onHoverOut={() => setIsHovered(false)}
+                onPress={() => router.push('/select-language')}
+                style={({ pressed }) => {
+                  const backgroundColor = pressed
+                    ? theme.accentPressed
+                    : isHovered
+                      ? theme.accentHover
+                      : theme.accent;
+
+                  return [
+                    styles.cta,
+                    {
+                      backgroundColor,
+                      borderColor: isFocused ? theme.focusRing : backgroundColor,
+                    },
+                    pressed && styles.ctaPressed,
+                  ];
+                }}>
+                <ThemedText style={[styles.ctaLabel, { color: theme.accentText }]}>
+                  EMPEZAR
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            <ThemedText themeColor="textSecondary" style={styles.footerNote}>
+              Gratis para empezar · A tu manera
             </ThemedText>
-          </Pressable>
-        </ThemedView>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </ThemedView>
   );
@@ -67,52 +157,167 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    alignItems: 'center',
   },
   safeArea: {
     flex: 1,
+    width: '100%',
     maxWidth: MaxContentWidth,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: Platform.select({ web: 84, default: Spacing.three }),
     paddingHorizontal: Spacing.four,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: Spacing.six,
-    paddingVertical: Spacing.five,
-  },
-  hero: {
-    alignItems: 'center',
-    gap: Spacing.three,
+    paddingBottom: Spacing.four,
   },
   brand: {
-    textAlign: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 10,
   },
-  welcome: {
+  logo: {
+    width: 50,
+    aspectRatio: LOGO_ASPECT_RATIO,
+  },
+  brandName: {
+    fontSize: 40,
+    fontWeight: 800,
+    lineHeight: 46,
+  },
+  mainContent: {
+    alignItems: 'center',
+    marginTop: Spacing.four,
+  },
+  mascotScene: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    width: '100%',
+    maxWidth: 360,
+    height: 282,
+  },
+  mascot: {
+    width: '86%',
+    maxWidth: 307,
+    aspectRatio: MASCOT_ASPECT_RATIO,
+  },
+  speechBubble: {
+    position: 'absolute',
+    zIndex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+  },
+  hiBubble: {
+    left: 6,
+    top: 48,
+    width: 92,
+    height: 64,
+  },
+  kanaBubble: {
+    right: 4,
+    bottom: 8,
+    width: 78,
+    height: 66,
+  },
+  bubbleText: {
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: 800,
+  },
+  kanaText: {
+    fontSize: 40,
+    lineHeight: 48,
+    fontWeight: 800,
+  },
+  decorationDot: {
+    position: 'absolute',
+    zIndex: 2,
+    borderRadius: 999,
+  },
+  orangeDot: {
+    left: 18,
+    top: 4,
+    width: 16,
+    height: 16,
+  },
+  purpleDot: {
+    right: 10,
+    top: 52,
+    width: 18,
+    height: 18,
+  },
+  yellowDot: {
+    right: 48,
+    top: 104,
+    width: 15,
+    height: 15,
+  },
+  smallYellowDot: {
+    right: 34,
+    top: 123,
+    width: 7,
+    height: 7,
+  },
+  mintDot: {
+    left: 0,
+    bottom: 62,
+    width: 12,
+    height: 12,
+  },
+  introduction: {
+    alignItems: 'center',
+    marginTop: Spacing.four,
+    gap: Spacing.three,
+  },
+  headline: {
     textAlign: 'center',
+    fontSize: 36,
+    lineHeight: 42,
+    fontWeight: 800,
   },
   description: {
     textAlign: 'center',
-    maxWidth: 320,
+    fontSize: 17,
+    lineHeight: 25,
+    fontWeight: 500,
+  },
+  footer: {
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 584,
+    alignSelf: 'center',
+    marginTop: 'auto',
+    paddingTop: 48,
+  },
+  ctaShadow: {
+    width: '100%',
+    paddingBottom: 8,
+    borderRadius: 24,
   },
   cta: {
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: 400,
-    minHeight: 52,
+    minHeight: 64,
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
     borderWidth: 3,
-    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 24,
     ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
   },
   ctaPressed: {
-    transform: [{ scale: 0.98 }],
+    transform: [{ translateY: 4 }],
   },
   ctaLabel: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 24,
+    fontWeight: 800,
+  },
+  footerNote: {
+    marginTop: Spacing.three,
+    textAlign: 'center',
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: 500,
   },
 });
