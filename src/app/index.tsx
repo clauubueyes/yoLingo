@@ -1,5 +1,6 @@
-import { Link } from 'expo-router';
-import { Pressable, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -8,14 +9,17 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const theme = useTheme();
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.content}>
           <ThemedView style={styles.hero}>
-            <ThemedText type="title" style={styles.brand}>
+            <ThemedText type="title" style={[styles.brand, { color: theme.accent }]}>
               yoLingo
             </ThemedText>
 
@@ -29,18 +33,31 @@ export default function HomeScreen() {
             </ThemedText>
           </ThemedView>
 
-          <Link href="/select-language" asChild>
-            <Pressable
-              style={({ pressed }) => [
-                styles.cta,
-                { backgroundColor: theme.accent },
-                pressed && styles.ctaPressed,
-              ]}>
-              <ThemedText type="smallBold" style={styles.ctaLabel}>
-                Empezar
-              </ThemedText>
-            </Pressable>
-          </Link>
+          <Pressable
+            accessibilityRole="button"
+            onBlur={() => setIsFocused(false)}
+            onFocus={() => setIsFocused(true)}
+            onHoverIn={() => setIsHovered(true)}
+            onHoverOut={() => setIsHovered(false)}
+            onPress={() => router.push('/select-language')}
+            style={({ pressed }) => [
+              styles.cta,
+              {
+                backgroundColor: pressed
+                  ? theme.accentPressed
+                  : isHovered
+                    ? theme.accentHover
+                    : theme.accent,
+                borderColor: isFocused ? theme.focusRing : 'transparent',
+              },
+              pressed && styles.ctaPressed,
+            ]}>
+            <ThemedText
+              type="smallBold"
+              style={[styles.ctaLabel, { color: theme.accentText }]}>
+              Empezar
+            </ThemedText>
+          </Pressable>
         </ThemedView>
       </SafeAreaView>
     </ThemedView>
@@ -82,15 +99,20 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: 400,
+    minHeight: 52,
+    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
-    borderRadius: Spacing.four,
+    borderWidth: 3,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
   },
   ctaPressed: {
-    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
   ctaLabel: {
-    color: '#ffffff',
+    fontSize: 16,
+    lineHeight: 24,
   },
 });
