@@ -1,17 +1,24 @@
 import { Image } from 'expo-image';
-import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
 import { ExternalLink } from '@/components/external-link';
+import { KanaStrokeDemo } from '@/components/kana-stroke-demo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { hiraganaA } from '@/content/japanese/hiragana';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function HiraganaALessonScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 900;
+  const theme = useTheme();
+  const [replayKey, setReplayKey] = useState(0);
+  const [isPracticeStarted, setIsPracticeStarted] = useState(false);
+  const [focusedButton, setFocusedButton] = useState<'replay' | 'practice' | null>(null);
 
   return (
     <ThemedView style={styles.container}>
@@ -56,18 +63,71 @@ export default function HiraganaALessonScreen() {
             </View>
 
             <ThemedView type="backgroundElement" style={styles.characterCard}>
-              <ThemedText
-                accessibilityLabel={`Hiragana ${hiraganaA.reading}`}
-                style={styles.character}>
-                {hiraganaA.symbol}
-              </ThemedText>
-              <ThemedView type="backgroundSelected" style={styles.readingBadge}>
-                <ThemedText themeColor="decorationPurple" style={styles.reading}>
-                  {hiraganaA.reading}
+              <View style={styles.cardHeading}>
+                <ThemedText accessibilityRole="header" style={styles.cardTitle}>
+                  {isPracticeStarted ? 'Tu turno' : `${hiraganaA.strokes.length} trazos`}
                 </ThemedText>
-              </ThemedView>
-              <ThemedText themeColor="textSecondary" style={styles.hint}>
-                Primero conocerás su forma. Después practicarás sus trazos.
+                <ThemedText themeColor="textSecondary" style={styles.hint}>
+                  {isPracticeStarted
+                    ? 'Recuerda el orden: horizontal, vertical y trazo curvo.'
+                    : 'Observa el orden y la dirección de cada trazo.'}
+                </ThemedText>
+              </View>
+
+              <KanaStrokeDemo
+                character={hiraganaA}
+                replayKey={replayKey}
+                showComplete={isPracticeStarted}
+              />
+
+              <View style={styles.actions}>
+                <Pressable
+                  accessibilityRole="button"
+                  onBlur={() => setFocusedButton(null)}
+                  onFocus={() => setFocusedButton('replay')}
+                  onPress={() => {
+                    setIsPracticeStarted(false);
+                    setReplayKey((current) => current + 1);
+                  }}
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    { borderColor: theme.accent, backgroundColor: pressed ? theme.backgroundSelected : 'transparent' },
+                    Platform.OS === 'web' && focusedButton === 'replay' && {
+                      outlineColor: theme.focusRing,
+                      outlineStyle: 'solid',
+                      outlineWidth: 3,
+                      outlineOffset: 2,
+                    },
+                  ]}>
+                  <ThemedText style={styles.secondaryButtonLabel}>REPRODUCIR DE NUEVO</ThemedText>
+                </Pressable>
+
+                <View style={[styles.primaryShadow, { backgroundColor: theme.accentShadow }]}>
+                  <Pressable
+                    accessibilityRole="button"
+                    onBlur={() => setFocusedButton(null)}
+                    onFocus={() => setFocusedButton('practice')}
+                    onPress={() => setIsPracticeStarted(true)}
+                    style={({ pressed }) => [
+                      styles.primaryButton,
+                      { backgroundColor: pressed ? theme.accentPressed : theme.accent },
+                      pressed && styles.primaryButtonPressed,
+                      Platform.OS === 'web' && focusedButton === 'practice' && {
+                        outlineColor: theme.focusRing,
+                        outlineStyle: 'solid',
+                        outlineWidth: 3,
+                        outlineOffset: 2,
+                      },
+                    ]}>
+                    <ThemedText style={[styles.primaryButtonLabel, { color: theme.accentText }]}>
+                      {isPracticeStarted ? 'PRÁCTICA LISTA' : 'COMENZAR PRÁCTICA'}
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+
+              <ThemedText accessibilityLiveRegion="polite" role="status" style={styles.status}>
+                {isPracticeStarted ? 'Práctica preparada. Empieza por el trazo horizontal.' : ''}
               </ThemedText>
               <ExternalLink href={hiraganaA.source.url}>
                 <ThemedText themeColor="textSecondary" style={styles.attribution}>
@@ -111,10 +171,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.four,
   },
-  character: { fontSize: 150, lineHeight: 174, fontWeight: 700 },
-  readingBadge: { minWidth: 72, padding: Spacing.two, borderRadius: 18, alignItems: 'center' },
-  reading: { fontSize: 28, lineHeight: 36, fontWeight: 800 },
+  cardHeading: { alignItems: 'center', gap: Spacing.two },
+  cardTitle: { fontSize: 28, lineHeight: 36, fontWeight: 800 },
   hint: { maxWidth: 320, textAlign: 'center', fontSize: 16, lineHeight: 24 },
+  actions: { width: '100%', gap: Spacing.three },
+  secondaryButton: {
+    minHeight: 52,
+    borderWidth: 2,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
+  },
+  secondaryButtonLabel: { fontSize: 14, lineHeight: 20, fontWeight: 800, textAlign: 'center' },
+  primaryShadow: { width: '100%', paddingBottom: 7, borderRadius: 20 },
+  primaryButton: {
+    minHeight: 56,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
+  },
+  primaryButtonPressed: { transform: [{ translateY: 4 }] },
+  primaryButtonLabel: { fontSize: 16, lineHeight: 22, fontWeight: 800, textAlign: 'center' },
+  status: { minHeight: 24, textAlign: 'center' },
   attribution: { fontSize: 13, lineHeight: 20, textDecorationLine: 'underline' },
   desktopContent: {
     paddingHorizontal: Spacing.six,
