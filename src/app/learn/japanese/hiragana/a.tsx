@@ -80,7 +80,6 @@ export default function HiraganaALessonScreen() {
               {isPracticeStarted ? (
                 <KanaWritingCanvas
                   character={hiraganaA}
-                  currentStrokeIndex={0}
                   onDrawingChange={setIsDrawing}
                 />
               ) : (
