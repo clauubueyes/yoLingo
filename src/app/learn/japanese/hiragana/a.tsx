@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackButton } from '@/components/back-button';
 import { ExternalLink } from '@/components/external-link';
 import { KanaStrokeDemo } from '@/components/kana-stroke-demo';
+import { KanaWritingCanvas } from '@/components/kana-writing-canvas';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { hiraganaA } from '@/content/japanese/hiragana';
@@ -18,6 +19,7 @@ export default function HiraganaALessonScreen() {
   const theme = useTheme();
   const [replayKey, setReplayKey] = useState(0);
   const [isPracticeStarted, setIsPracticeStarted] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [focusedButton, setFocusedButton] = useState<'replay' | 'practice' | null>(null);
 
   return (
@@ -25,6 +27,7 @@ export default function HiraganaALessonScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           alwaysBounceVertical={false}
+          scrollEnabled={!isDrawing}
           contentContainerStyle={[styles.content, isDesktop && styles.desktopContent]}>
           <View style={[styles.topBar, isDesktop && styles.desktopTopBar]}>
             <BackButton
@@ -74,11 +77,15 @@ export default function HiraganaALessonScreen() {
                 </ThemedText>
               </View>
 
-              <KanaStrokeDemo
-                character={hiraganaA}
-                replayKey={replayKey}
-                showComplete={isPracticeStarted}
-              />
+              {isPracticeStarted ? (
+                <KanaWritingCanvas
+                  character={hiraganaA}
+                  currentStrokeIndex={0}
+                  onDrawingChange={setIsDrawing}
+                />
+              ) : (
+                <KanaStrokeDemo character={hiraganaA} replayKey={replayKey} />
+              )}
 
               <View style={styles.actions}>
                 <Pressable
@@ -99,36 +106,36 @@ export default function HiraganaALessonScreen() {
                       outlineOffset: 2,
                     },
                   ]}>
-                  <ThemedText style={styles.secondaryButtonLabel}>REPRODUCIR DE NUEVO</ThemedText>
+                  <ThemedText style={styles.secondaryButtonLabel}>
+                    {isPracticeStarted ? 'VER DEMOSTRACIÓN' : 'REPRODUCIR DE NUEVO'}
+                  </ThemedText>
                 </Pressable>
 
-                <View style={[styles.primaryShadow, { backgroundColor: theme.accentShadow }]}>
-                  <Pressable
-                    accessibilityRole="button"
-                    onBlur={() => setFocusedButton(null)}
-                    onFocus={() => setFocusedButton('practice')}
-                    onPress={() => setIsPracticeStarted(true)}
-                    style={({ pressed }) => [
-                      styles.primaryButton,
-                      { backgroundColor: pressed ? theme.accentPressed : theme.accent },
-                      pressed && styles.primaryButtonPressed,
-                      Platform.OS === 'web' && focusedButton === 'practice' && {
-                        outlineColor: theme.focusRing,
-                        outlineStyle: 'solid',
-                        outlineWidth: 3,
-                        outlineOffset: 2,
-                      },
-                    ]}>
-                    <ThemedText style={[styles.primaryButtonLabel, { color: theme.accentText }]}>
-                      {isPracticeStarted ? 'PRÁCTICA LISTA' : 'COMENZAR PRÁCTICA'}
-                    </ThemedText>
-                  </Pressable>
-                </View>
+                {!isPracticeStarted && (
+                  <View style={[styles.primaryShadow, { backgroundColor: theme.accentShadow }]}>
+                    <Pressable
+                      accessibilityRole="button"
+                      onBlur={() => setFocusedButton(null)}
+                      onFocus={() => setFocusedButton('practice')}
+                      onPress={() => setIsPracticeStarted(true)}
+                      style={({ pressed }) => [
+                        styles.primaryButton,
+                        { backgroundColor: pressed ? theme.accentPressed : theme.accent },
+                        pressed && styles.primaryButtonPressed,
+                        Platform.OS === 'web' && focusedButton === 'practice' && {
+                          outlineColor: theme.focusRing,
+                          outlineStyle: 'solid',
+                          outlineWidth: 3,
+                          outlineOffset: 2,
+                        },
+                      ]}>
+                      <ThemedText style={[styles.primaryButtonLabel, { color: theme.accentText }]}>
+                        COMENZAR PRÁCTICA
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                )}
               </View>
-
-              <ThemedText accessibilityLiveRegion="polite" role="status" style={styles.status}>
-                {isPracticeStarted ? 'Práctica preparada. Empieza por el trazo horizontal.' : ''}
-              </ThemedText>
               <ExternalLink href={hiraganaA.source.url}>
                 <ThemedText themeColor="textSecondary" style={styles.attribution}>
                   Trazos: {hiraganaA.source.name} · {hiraganaA.source.license} ↗
@@ -196,7 +203,6 @@ const styles = StyleSheet.create({
   },
   primaryButtonPressed: { transform: [{ translateY: 4 }] },
   primaryButtonLabel: { fontSize: 16, lineHeight: 22, fontWeight: 800, textAlign: 'center' },
-  status: { minHeight: 24, textAlign: 'center' },
   attribution: { fontSize: 13, lineHeight: 20, textDecorationLine: 'underline' },
   desktopContent: {
     paddingHorizontal: Spacing.six,
