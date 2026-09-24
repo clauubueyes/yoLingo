@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,9 +15,20 @@ type LanguageId = (typeof languages)[number]['id'];
 export default function SelectLanguageScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 900;
+  const router = useRouter();
   const theme = useTheme();
   const [selectedId, setSelectedId] = useState<LanguageId | null>(null);
   const [focusedId, setFocusedId] = useState<LanguageId | null>(null);
+  const [isBackFocused, setIsBackFocused] = useState(false);
+
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/');
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -24,14 +36,37 @@ export default function SelectLanguageScreen() {
         <ScrollView
           alwaysBounceVertical={false}
           contentContainerStyle={[styles.content, isDesktop && styles.desktopContent]}>
-          <View style={[styles.brand, isDesktop && styles.desktopBrand]}>
-            <Image
-              accessible={false}
-              contentFit="contain"
-              source={require('@/assets/images/welcome/logo.png')}
-              style={styles.logo}
-            />
-            <ThemedText style={styles.brandName}>yoLingo</ThemedText>
+          <View style={[styles.topBar, isDesktop && styles.desktopTopBar]}>
+            <Pressable
+              accessibilityLabel="Volver a la bienvenida"
+              accessibilityRole="button"
+              hitSlop={8}
+              onBlur={() => setIsBackFocused(false)}
+              onFocus={() => setIsBackFocused(true)}
+              onPress={goBack}
+              style={({ pressed }) => [
+                styles.backButton,
+                isDesktop && styles.desktopBackButton,
+                { backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement },
+                Platform.OS === 'web' && isBackFocused && {
+                  outlineColor: theme.focusRing,
+                  outlineStyle: 'solid',
+                  outlineWidth: 3,
+                  outlineOffset: 2,
+                },
+              ]}>
+              <ThemedText style={styles.backLabel}>← Atrás</ThemedText>
+            </Pressable>
+
+            <View style={[styles.brand, isDesktop && styles.desktopBrand]}>
+              <Image
+                accessible={false}
+                contentFit="contain"
+                source={require('@/assets/images/welcome/logo.png')}
+                style={styles.logo}
+              />
+              <ThemedText style={styles.brandName}>yoLingo</ThemedText>
+            </View>
           </View>
           <View style={[styles.main, isDesktop && styles.desktopMain]}>
             <View style={[styles.introduction, isDesktop && styles.desktopIntroduction]}>
@@ -139,6 +174,21 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.five,
     paddingBottom: Spacing.four,
   },
+  topBar: {
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    paddingHorizontal: Spacing.three,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
+  },
+  backLabel: { fontSize: 16, lineHeight: 22, fontWeight: 700 },
   title: {
     fontSize: 36,
     lineHeight: 42,
@@ -190,7 +240,9 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.five,
     paddingBottom: Spacing.six,
   },
-  desktopBrand: { alignSelf: 'flex-start' },
+  desktopTopBar: { flexDirection: 'row' },
+  desktopBackButton: { alignSelf: 'center' },
+  desktopBrand: { alignSelf: 'center' },
   desktopMain: {
     flexGrow: 1,
     flexDirection: 'row',
