@@ -1,15 +1,22 @@
 import { Image } from 'expo-image';
-import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { languages } from '@/constants/languages';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+
+type LanguageId = (typeof languages)[number]['id'];
 
 export default function SelectLanguageScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 900;
+  const theme = useTheme();
+  const [selectedId, setSelectedId] = useState<LanguageId | null>(null);
+  const [focusedId, setFocusedId] = useState<LanguageId | null>(null);
 
   return (
     <ThemedView style={styles.container}>
@@ -43,7 +50,28 @@ export default function SelectLanguageScreen() {
 
             <View style={[styles.options, isDesktop && styles.desktopOptions]}>
               {languages.map((language) => (
-                <ThemedView key={language.id} type="backgroundElement" style={styles.card}>
+                <Pressable
+                  key={language.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${language.name}, ${language.nativeName}. ${language.description}`}
+                  accessibilityState={{ selected: selectedId === language.id }}
+                  aria-pressed={selectedId === language.id}
+                  onPress={() => setSelectedId(language.id)}
+                  onFocus={() => setFocusedId(language.id)}
+                  onBlur={() => setFocusedId(null)}
+                  style={({ pressed }) => [
+                    styles.card,
+                    {
+                      backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
+                      borderColor: selectedId === language.id ? theme.accent : 'transparent',
+                    },
+                    Platform.OS === 'web' && focusedId === language.id && {
+                      outlineColor: theme.focusRing,
+                      outlineStyle: 'solid',
+                      outlineWidth: 3,
+                      outlineOffset: 4,
+                    },
+                  ]}>
                   <ThemedView
                     accessibilityElementsHidden
                     aria-hidden
@@ -55,7 +83,7 @@ export default function SelectLanguageScreen() {
                     </ThemedText>
                   </ThemedView>
                   <View style={styles.languageNames}>
-                    <ThemedText accessibilityRole="header" style={styles.languageName}>
+                    <ThemedText style={styles.languageName}>
                       {language.name}
                     </ThemedText>
                     <ThemedText themeColor="textSecondary" style={styles.nativeName}>
@@ -65,8 +93,24 @@ export default function SelectLanguageScreen() {
                   <ThemedText themeColor="textSecondary" style={styles.cardDescription}>
                     {language.description}
                   </ThemedText>
-                </ThemedView>
+                  {selectedId === language.id && (
+                    <View
+                      accessibilityElementsHidden
+                      aria-hidden
+                      importantForAccessibility="no-hide-descendants"
+                      style={[styles.selectionIndicator, { backgroundColor: theme.accent }]}>
+                      <ThemedText style={[styles.checkmark, { color: theme.accentText }]}>
+                        ✓
+                      </ThemedText>
+                    </View>
+                  )}
+                </Pressable>
               ))}
+              <ThemedText accessibilityLiveRegion="polite" role="status" style={styles.selectionStatus}>
+                {selectedId !== null
+                  ? `${languages.find((language) => language.id === selectedId)?.name} seleccionado`
+                  : ''}
+              </ThemedText>
             </View>
           </View>
         </ScrollView>
@@ -116,7 +160,19 @@ const styles = StyleSheet.create({
   brandName: { fontSize: 40, lineHeight: 46, fontWeight: 800 },
   introduction: { width: '100%', maxWidth: 540, gap: Spacing.three },
   options: { width: '100%', maxWidth: 480, gap: Spacing.four },
-  card: { borderRadius: 32, padding: Spacing.five, gap: Spacing.four },
+  card: { borderRadius: 32, borderWidth: 3, padding: Spacing.five - 3, gap: Spacing.four },
+  selectionIndicator: {
+    position: 'absolute',
+    top: Spacing.four,
+    right: Spacing.four,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmark: { fontSize: 20, lineHeight: 26, fontWeight: 800 },
+  selectionStatus: { minHeight: 24, textAlign: 'center' },
   decoration: {
     width: 96,
     height: 96,
