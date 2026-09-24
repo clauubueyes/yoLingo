@@ -3,8 +3,10 @@ import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
+import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { hiraganaA } from '@/content/japanese/hiragana';
 import { Spacing } from '@/constants/theme';
 
 export default function HiraganaALessonScreen() {
@@ -43,28 +45,35 @@ export default function HiraganaALessonScreen() {
               <ThemedText
                 accessibilityRole="header"
                 style={[styles.title, isDesktop && styles.desktopTitle]}>
-                Conoce あ
+                Conoce {hiraganaA.symbol}
               </ThemedText>
               <ThemedText
                 themeColor="textSecondary"
                 style={[styles.description, isDesktop && styles.desktopDescription]}>
-                あ representa el sonido «a», como en «casa». Es la primera vocal que aprenderás a
-                reconocer y escribir.
+                {hiraganaA.symbol} representa el sonido «{hiraganaA.reading}», como en «casa». Es la
+                primera vocal que aprenderás a reconocer y escribir.
               </ThemedText>
             </View>
 
             <ThemedView type="backgroundElement" style={styles.characterCard}>
-              <ThemedText accessibilityLabel="Hiragana a" style={styles.character}>
-                あ
+              <ThemedText
+                accessibilityLabel={`Hiragana ${hiraganaA.reading}`}
+                style={styles.character}>
+                {hiraganaA.symbol}
               </ThemedText>
               <ThemedView type="backgroundSelected" style={styles.readingBadge}>
                 <ThemedText themeColor="decorationPurple" style={styles.reading}>
-                  a
+                  {hiraganaA.reading}
                 </ThemedText>
               </ThemedView>
               <ThemedText themeColor="textSecondary" style={styles.hint}>
                 Primero conocerás su forma. Después practicarás sus trazos.
               </ThemedText>
+              <ExternalLink href={hiraganaA.source.url}>
+                <ThemedText themeColor="textSecondary" style={styles.attribution}>
+                  Trazos: {hiraganaA.source.name} · {hiraganaA.source.license} ↗
+                </ThemedText>
+              </ExternalLink>
             </ThemedView>
           </View>
         </ScrollView>
@@ -106,6 +115,7 @@ const styles = StyleSheet.create({
   readingBadge: { minWidth: 72, padding: Spacing.two, borderRadius: 18, alignItems: 'center' },
   reading: { fontSize: 28, lineHeight: 36, fontWeight: 800 },
   hint: { maxWidth: 320, textAlign: 'center', fontSize: 16, lineHeight: 24 },
+  attribution: { fontSize: 13, lineHeight: 20, textDecorationLine: 'underline' },
   desktopContent: {
     paddingHorizontal: Spacing.six,
     paddingTop: Spacing.five,
