@@ -1,10 +1,12 @@
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
 import { ExternalLink } from '@/components/external-link';
+import { KanaLessonResult, KanaRecognitionQuiz } from '@/components/kana-lesson-completion';
 import { KanaStrokeDemo } from '@/components/kana-stroke-demo';
 import { KanaWritingCanvas } from '@/components/kana-writing-canvas';
 import { ThemedText } from '@/components/themed-text';
@@ -13,14 +15,22 @@ import { hiraganaA } from '@/content/japanese/hiragana';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+type LessonPhase = 'demonstration' | 'writing' | 'recognition' | 'result';
+
 export default function HiraganaALessonScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 900;
+  const router = useRouter();
   const theme = useTheme();
   const [replayKey, setReplayKey] = useState(0);
-  const [isPracticeStarted, setIsPracticeStarted] = useState(false);
+  const [phase, setPhase] = useState<LessonPhase>('demonstration');
   const [isDrawing, setIsDrawing] = useState(false);
   const [focusedButton, setFocusedButton] = useState<'replay' | 'practice' | null>(null);
+
+  const repeatLesson = () => {
+    setReplayKey((current) => current + 1);
+    setPhase('demonstration');
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -66,57 +76,78 @@ export default function HiraganaALessonScreen() {
             </View>
 
             <ThemedView type="backgroundElement" style={styles.characterCard}>
-              <View style={styles.cardHeading}>
-                <ThemedText accessibilityRole="header" style={styles.cardTitle}>
-                  {isPracticeStarted ? 'Tu turno' : `${hiraganaA.strokes.length} trazos`}
-                </ThemedText>
-                <ThemedText themeColor="textSecondary" style={styles.hint}>
-                  {isPracticeStarted
-                    ? 'Recuerda el orden: horizontal, vertical y trazo curvo.'
-                    : 'Observa el orden y la dirección de cada trazo.'}
-                </ThemedText>
-              </View>
-
-              {isPracticeStarted ? (
-                <KanaWritingCanvas
-                  character={hiraganaA}
-                  onDrawingChange={setIsDrawing}
-                />
-              ) : (
-                <KanaStrokeDemo character={hiraganaA} replayKey={replayKey} />
+              {(phase === 'demonstration' || phase === 'writing') && (
+                <View style={styles.cardHeading}>
+                  <ThemedText accessibilityRole="header" style={styles.cardTitle}>
+                    {phase === 'writing' ? 'Tu turno' : `${hiraganaA.strokes.length} trazos`}
+                  </ThemedText>
+                  <ThemedText themeColor="textSecondary" style={styles.hint}>
+                    {phase === 'writing'
+                      ? 'Recuerda el orden: horizontal, vertical y trazo curvo.'
+                      : 'Observa el orden y la dirección de cada trazo.'}
+                  </ThemedText>
+                </View>
               )}
 
-              <View style={styles.actions}>
-                <Pressable
-                  accessibilityRole="button"
-                  onBlur={() => setFocusedButton(null)}
-                  onFocus={() => setFocusedButton('replay')}
-                  onPress={() => {
-                    setIsPracticeStarted(false);
-                    setReplayKey((current) => current + 1);
-                  }}
-                  style={({ pressed }) => [
-                    styles.secondaryButton,
-                    { borderColor: theme.accent, backgroundColor: pressed ? theme.backgroundSelected : 'transparent' },
-                    Platform.OS === 'web' && focusedButton === 'replay' && {
-                      outlineColor: theme.focusRing,
-                      outlineStyle: 'solid',
-                      outlineWidth: 3,
-                      outlineOffset: 2,
-                    },
-                  ]}>
-                  <ThemedText style={styles.secondaryButtonLabel}>
-                    {isPracticeStarted ? 'VER DEMOSTRACIÓN' : 'REPRODUCIR DE NUEVO'}
-                  </ThemedText>
-                </Pressable>
+              {phase === 'writing' && (
+                <KanaWritingCanvas
+                  character={hiraganaA}
+                  onComplete={() => setPhase('recognition')}
+                  onDrawingChange={setIsDrawing}
+                />
+              )}
+              {phase === 'demonstration' && (
+                <KanaStrokeDemo character={hiraganaA} replayKey={replayKey} />
+              )}
+              {phase === 'recognition' && (
+                <KanaRecognitionQuiz
+                  character={hiraganaA}
+                  onComplete={() => setPhase('result')}
+                />
+              )}
+              {phase === 'result' && (
+                <KanaLessonResult
+                  character={hiraganaA}
+                  onRepeat={repeatLesson}
+                  onReturnToLanguages={() => router.replace('/select-language')}
+                />
+              )}
 
-                {!isPracticeStarted && (
+              {(phase === 'demonstration' || phase === 'writing') && (
+                <View style={styles.actions}>
+                  <Pressable
+                    accessibilityRole="button"
+                    onBlur={() => setFocusedButton(null)}
+                    onFocus={() => setFocusedButton('replay')}
+                    onPress={() => {
+                      setPhase('demonstration');
+                      setReplayKey((current) => current + 1);
+                    }}
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      {
+                        borderColor: theme.accent,
+                        backgroundColor: pressed ? theme.backgroundSelected : 'transparent',
+                      },
+                      Platform.OS === 'web' && focusedButton === 'replay' && {
+                        outlineColor: theme.focusRing,
+                        outlineStyle: 'solid',
+                        outlineWidth: 3,
+                        outlineOffset: 2,
+                      },
+                    ]}>
+                    <ThemedText style={styles.secondaryButtonLabel}>
+                      {phase === 'writing' ? 'VER DEMOSTRACIÓN' : 'REPRODUCIR DE NUEVO'}
+                    </ThemedText>
+                  </Pressable>
+
+                  {phase === 'demonstration' && (
                   <View style={[styles.primaryShadow, { backgroundColor: theme.accentShadow }]}>
                     <Pressable
                       accessibilityRole="button"
                       onBlur={() => setFocusedButton(null)}
                       onFocus={() => setFocusedButton('practice')}
-                      onPress={() => setIsPracticeStarted(true)}
+                      onPress={() => setPhase('writing')}
                       style={({ pressed }) => [
                         styles.primaryButton,
                         { backgroundColor: pressed ? theme.accentPressed : theme.accent },
@@ -133,8 +164,9 @@ export default function HiraganaALessonScreen() {
                       </ThemedText>
                     </Pressable>
                   </View>
-                )}
-              </View>
+                  )}
+                </View>
+              )}
               <ExternalLink href={hiraganaA.source.url}>
                 <ThemedText themeColor="textSecondary" style={styles.attribution}>
                   Trazos: {hiraganaA.source.name} · {hiraganaA.source.license} ↗

@@ -97,6 +97,7 @@ function drawingReducer(state: DrawingState, action: DrawingAction): DrawingStat
 
 type KanaWritingCanvasProps = {
   character: KanaCharacter;
+  onComplete: () => void;
   onDrawingChange: (isDrawing: boolean) => void;
 };
 
@@ -108,6 +109,7 @@ function pointsToPath(points: readonly StrokePoint[]) {
 
 export function KanaWritingCanvas({
   character,
+  onComplete,
   onDrawingChange,
 }: KanaWritingCanvasProps) {
   const theme = useTheme();
@@ -121,7 +123,7 @@ export function KanaWritingCanvas({
     feedback,
     isComplete,
   } = drawing;
-  const [focusedButton, setFocusedButton] = useState<'undo' | 'reset' | null>(null);
+  const [focusedButton, setFocusedButton] = useState<'continue' | 'undo' | 'reset' | null>(null);
   const expectedStroke = character.strokes[currentStrokeIndex];
   const [minX, minY, width, height] = character.viewBox;
 
@@ -300,6 +302,31 @@ export function KanaWritingCanvas({
           );
         })}
       </View>
+
+      {isComplete && (
+        <View style={[styles.continueShadow, { backgroundColor: theme.accentShadow }]}>
+          <Pressable
+            accessibilityRole="button"
+            onBlur={() => setFocusedButton(null)}
+            onFocus={() => setFocusedButton('continue')}
+            onPress={onComplete}
+            style={({ pressed }) => [
+              styles.continueButton,
+              { backgroundColor: pressed ? theme.accentPressed : theme.accent },
+              pressed && styles.continuePressed,
+              Platform.OS === 'web' && focusedButton === 'continue' && {
+                outlineColor: theme.focusRing,
+                outlineStyle: 'solid',
+                outlineWidth: 3,
+                outlineOffset: 2,
+              },
+            ]}>
+            <ThemedText style={[styles.continueLabel, { color: theme.accentText }]}>
+              CONTINUAR
+            </ThemedText>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
@@ -328,4 +355,14 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
   },
   controlLabel: { fontSize: 15, lineHeight: 20, fontWeight: 800, textAlign: 'center' },
+  continueShadow: { width: '100%', paddingBottom: 7, borderRadius: 20 },
+  continueButton: {
+    minHeight: 56,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
+  },
+  continuePressed: { transform: [{ translateY: 4 }] },
+  continueLabel: { fontSize: 16, lineHeight: 22, fontWeight: 800 },
 });
