@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/back-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { languages } from '@/constants/languages';
@@ -19,16 +20,9 @@ export default function SelectLanguageScreen() {
   const theme = useTheme();
   const [selectedId, setSelectedId] = useState<LanguageId | null>(null);
   const [focusedId, setFocusedId] = useState<LanguageId | null>(null);
-  const [isBackFocused, setIsBackFocused] = useState(false);
-
-  const goBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace('/');
-  };
+  const [isContinueFocused, setIsContinueFocused] = useState(false);
+  const [isContinueHovered, setIsContinueHovered] = useState(false);
+  const canContinue = selectedId === 'ja';
 
   return (
     <ThemedView style={styles.container}>
@@ -37,26 +31,11 @@ export default function SelectLanguageScreen() {
           alwaysBounceVertical={false}
           contentContainerStyle={[styles.content, isDesktop && styles.desktopContent]}>
           <View style={[styles.topBar, isDesktop && styles.desktopTopBar]}>
-            <Pressable
+            <BackButton
               accessibilityLabel="Volver a la bienvenida"
-              accessibilityRole="button"
-              hitSlop={8}
-              onBlur={() => setIsBackFocused(false)}
-              onFocus={() => setIsBackFocused(true)}
-              onPress={goBack}
-              style={({ pressed }) => [
-                styles.backButton,
-                isDesktop && styles.desktopBackButton,
-                { backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement },
-                Platform.OS === 'web' && isBackFocused && {
-                  outlineColor: theme.focusRing,
-                  outlineStyle: 'solid',
-                  outlineWidth: 3,
-                  outlineOffset: 2,
-                },
-              ]}>
-              <ThemedText style={styles.backLabel}>← Atrás</ThemedText>
-            </Pressable>
+              fallbackHref="/"
+              style={isDesktop && styles.desktopBackButton}
+            />
 
             <View style={[styles.brand, isDesktop && styles.desktopBrand]}>
               <Image
@@ -146,6 +125,48 @@ export default function SelectLanguageScreen() {
                   ? `${languages.find((language) => language.id === selectedId)?.name} seleccionado`
                   : ''}
               </ThemedText>
+
+              <View
+                style={[
+                  styles.continueShadow,
+                  {
+                    backgroundColor: canContinue
+                      ? theme.accentShadow
+                      : theme.backgroundSelected,
+                  },
+                ]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !canContinue }}
+                  disabled={!canContinue}
+                  onBlur={() => setIsContinueFocused(false)}
+                  onFocus={() => setIsContinueFocused(true)}
+                  onHoverIn={() => setIsContinueHovered(true)}
+                  onHoverOut={() => setIsContinueHovered(false)}
+                  onPress={() => router.push('/learn/japanese/hiragana/a')}
+                  style={({ pressed }) => [
+                    styles.continueButton,
+                    {
+                      backgroundColor: !canContinue
+                        ? theme.backgroundSelected
+                        : pressed
+                          ? theme.accentPressed
+                          : isContinueHovered
+                            ? theme.accentHover
+                            : theme.accent,
+                      borderColor: isContinueFocused ? theme.focusRing : 'transparent',
+                    },
+                    pressed && styles.continuePressed,
+                  ]}>
+                  <ThemedText
+                    style={[
+                      styles.continueLabel,
+                      { color: canContinue ? theme.accentText : theme.textSecondary },
+                    ]}>
+                    CONTINUAR
+                  </ThemedText>
+                </Pressable>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -179,16 +200,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.three,
   },
-  backButton: {
-    alignSelf: 'flex-start',
-    minHeight: 44,
-    paddingHorizontal: Spacing.three,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
-  },
-  backLabel: { fontSize: 16, lineHeight: 22, fontWeight: 700 },
   title: {
     fontSize: 36,
     lineHeight: 42,
@@ -223,6 +234,17 @@ const styles = StyleSheet.create({
   },
   checkmark: { fontSize: 20, lineHeight: 26, fontWeight: 800 },
   selectionStatus: { minHeight: 24, textAlign: 'center' },
+  continueShadow: { width: '100%', paddingBottom: 8, borderRadius: 24 },
+  continueButton: {
+    minHeight: 64,
+    borderWidth: 3,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
+  },
+  continuePressed: { transform: [{ translateY: 4 }] },
+  continueLabel: { fontSize: 18, lineHeight: 24, fontWeight: 800 },
   decoration: {
     width: 96,
     height: 96,
