@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
   View,
   type GestureResponderEvent,
   type LayoutChangeEvent,
@@ -113,6 +114,7 @@ export function KanaWritingCanvas({
   onDrawingChange,
 }: KanaWritingCanvasProps) {
   const theme = useTheme();
+  const { height: windowHeight } = useWindowDimensions();
   const [canvasSize, setCanvasSize] = useState<CanvasSize>({ width: 1, height: 1 });
   const [drawing, dispatch] = useReducer(drawingReducer, initialDrawingState);
   const {
@@ -184,6 +186,7 @@ export function KanaWritingCanvas({
         onLayout={handleLayout}
         style={[
           styles.canvas,
+          windowHeight < 800 && styles.shortCanvas,
           Platform.OS === 'web' && webCanvasStyle,
           { backgroundColor: theme.backgroundSelected, borderColor: theme.accent },
         ]}>
@@ -333,15 +336,16 @@ export function KanaWritingCanvas({
 
 const styles = StyleSheet.create({
   container: { width: '100%', alignItems: 'center', gap: Spacing.three },
-  instruction: { fontSize: 17, lineHeight: 24, fontWeight: 800, textAlign: 'center' },
+  instruction: { fontSize: 16, lineHeight: 22, fontWeight: 800, textAlign: 'center' },
   canvas: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 320,
     aspectRatio: 1,
     borderWidth: 2,
     borderRadius: 28,
     overflow: 'hidden',
   },
+  shortCanvas: { maxWidth: 280 },
   controls: { width: '100%', flexDirection: 'row', gap: Spacing.three },
   feedback: { minHeight: 24, textAlign: 'center', fontSize: 15, lineHeight: 22, fontWeight: 700 },
   control: {

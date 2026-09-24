@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedProps,
@@ -78,6 +78,7 @@ type KanaStrokeDemoProps = {
 
 export function KanaStrokeDemo({ character, replayKey, showComplete = false }: KanaStrokeDemoProps) {
   const theme = useTheme();
+  const { height: windowHeight } = useWindowDimensions();
   const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
   const [minX, minY, width, height] = character.viewBox;
 
@@ -95,7 +96,11 @@ export function KanaStrokeDemo({ character, replayKey, showComplete = false }: K
     <View
       accessibilityLabel={`${character.symbol}, ${character.strokes.length} trazos mostrados en orden`}
       accessibilityRole="image"
-      style={[styles.canvas, { backgroundColor: theme.backgroundSelected }]}>
+      style={[
+        styles.canvas,
+        windowHeight < 800 && styles.shortCanvas,
+        { backgroundColor: theme.backgroundSelected },
+      ]}>
       <Svg
         aria-hidden
         height="100%"
@@ -139,9 +144,10 @@ export function KanaStrokeDemo({ character, replayKey, showComplete = false }: K
 const styles = StyleSheet.create({
   canvas: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 320,
     aspectRatio: 1,
     borderRadius: 28,
     overflow: 'hidden',
   },
+  shortCanvas: { maxWidth: 280 },
 });

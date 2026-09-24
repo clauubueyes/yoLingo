@@ -18,8 +18,10 @@ import { useTheme } from '@/hooks/use-theme';
 type LessonPhase = 'demonstration' | 'writing' | 'recognition' | 'result';
 
 export default function HiraganaALessonScreen() {
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width >= 900;
+  const { height, width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 960;
+  const isCompact = width < 480 || height < 800;
+  const isShortDesktop = isDesktop && height < 800;
   const router = useRouter();
   const theme = useTheme();
   const [replayKey, setReplayKey] = useState(0);
@@ -38,7 +40,12 @@ export default function HiraganaALessonScreen() {
         <ScrollView
           alwaysBounceVertical={false}
           scrollEnabled={!isDrawing}
-          contentContainerStyle={[styles.content, isDesktop && styles.desktopContent]}>
+          contentContainerStyle={[
+            styles.content,
+            isCompact && styles.compactContent,
+            isDesktop && styles.desktopContent,
+            isShortDesktop && styles.shortDesktopContent,
+          ]}>
           <View style={[styles.topBar, isDesktop && styles.desktopTopBar]}>
             <BackButton
               accessibilityLabel="Volver a seleccionar idioma"
@@ -51,31 +58,47 @@ export default function HiraganaALessonScreen() {
                 accessible={false}
                 contentFit="contain"
                 source={require('@/assets/images/welcome/logo.png')}
-                style={styles.logo}
+                style={[styles.logo, isCompact && styles.compactLogo]}
               />
-              <ThemedText style={styles.brandName}>yoLingo</ThemedText>
+              <ThemedText style={[styles.brandName, isCompact && styles.compactBrandName]}>
+                yoLingo
+              </ThemedText>
             </View>
           </View>
 
-          <View style={[styles.lesson, isDesktop && styles.desktopLesson]}>
-            <View style={[styles.introduction, isDesktop && styles.desktopIntroduction]}>
-              <ThemedText themeColor="decorationPurple" style={styles.eyebrow}>
-                HIRAGANA · PRIMERA LECCIÓN
-              </ThemedText>
-              <ThemedText
-                accessibilityRole="header"
-                style={[styles.title, isDesktop && styles.desktopTitle]}>
-                Conoce {hiraganaA.symbol}
-              </ThemedText>
-              <ThemedText
-                themeColor="textSecondary"
-                style={[styles.description, isDesktop && styles.desktopDescription]}>
-                {hiraganaA.symbol} representa el sonido «{hiraganaA.reading}», como en «casa». Es la
-                primera vocal que aprenderás a reconocer y escribir.
-              </ThemedText>
-            </View>
+          <View
+            style={[
+              styles.lesson,
+              isCompact && styles.compactLesson,
+              isDesktop && styles.desktopLesson,
+              isShortDesktop && styles.shortDesktopLesson,
+            ]}>
+            {(isDesktop || phase === 'demonstration') && (
+              <View style={[styles.introduction, isDesktop && styles.desktopIntroduction]}>
+                <ThemedText themeColor="decorationPurple" style={styles.eyebrow}>
+                  HIRAGANA · PRIMERA LECCIÓN
+                </ThemedText>
+                <ThemedText
+                  accessibilityRole="header"
+                  style={[
+                    styles.title,
+                    isCompact && styles.compactTitle,
+                    isDesktop && styles.desktopTitle,
+                  ]}>
+                  Conoce {hiraganaA.symbol}
+                </ThemedText>
+                <ThemedText
+                  themeColor="textSecondary"
+                  style={[styles.description, isDesktop && styles.desktopDescription]}>
+                  {hiraganaA.symbol} representa el sonido «{hiraganaA.reading}», como en «casa». Es la
+                  primera vocal que aprenderás a reconocer y escribir.
+                </ThemedText>
+              </View>
+            )}
 
-            <ThemedView type="backgroundElement" style={styles.characterCard}>
+            <ThemedView
+              type="backgroundElement"
+              style={[styles.characterCard, isCompact && styles.compactCharacterCard]}>
               {(phase === 'demonstration' || phase === 'writing') && (
                 <View style={styles.cardHeading}>
                   <ThemedText accessibilityRole="header" style={styles.cardTitle}>
@@ -184,10 +207,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center' },
   safeArea: { flex: 1, width: '100%', maxWidth: 1280 },
   content: { flexGrow: 1, padding: Spacing.four },
+  compactContent: { padding: Spacing.three },
   topBar: { width: '100%', alignItems: 'center', gap: Spacing.three },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logo: { width: 50, aspectRatio: 62 / 53 },
+  compactLogo: { width: 42 },
   brandName: { fontSize: 40, lineHeight: 46, fontWeight: 800 },
+  compactBrandName: { fontSize: 34, lineHeight: 40 },
   lesson: {
     flexGrow: 1,
     alignItems: 'center',
@@ -195,20 +221,23 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.five,
     paddingBottom: Spacing.four,
   },
+  compactLesson: { gap: Spacing.four, paddingTop: Spacing.four },
   introduction: { width: '100%', maxWidth: 540, alignItems: 'center', gap: Spacing.three },
   eyebrow: { fontSize: 14, lineHeight: 20, fontWeight: 800, letterSpacing: 1.2 },
   title: { textAlign: 'center', fontSize: 40, lineHeight: 48, fontWeight: 800 },
+  compactTitle: { fontSize: 34, lineHeight: 41 },
   description: { textAlign: 'center', fontSize: 17, lineHeight: 26 },
   characterCard: {
     width: '100%',
-    maxWidth: 480,
+    maxWidth: 440,
     minHeight: 360,
     borderRadius: 32,
-    padding: Spacing.five,
+    padding: Spacing.four,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.four,
   },
+  compactCharacterCard: { borderRadius: 26, padding: Spacing.three, gap: Spacing.three },
   cardHeading: { alignItems: 'center', gap: Spacing.two },
   cardTitle: { fontSize: 28, lineHeight: 36, fontWeight: 800 },
   hint: { maxWidth: 320, textAlign: 'center', fontSize: 16, lineHeight: 24 },
@@ -236,19 +265,21 @@ const styles = StyleSheet.create({
   primaryButtonLabel: { fontSize: 16, lineHeight: 22, fontWeight: 800, textAlign: 'center' },
   attribution: { fontSize: 13, lineHeight: 20, textDecorationLine: 'underline' },
   desktopContent: {
-    paddingHorizontal: Spacing.six,
-    paddingTop: Spacing.five,
-    paddingBottom: Spacing.six,
+    paddingHorizontal: 48,
+    paddingTop: Spacing.four,
+    paddingBottom: 48,
   },
+  shortDesktopContent: { paddingTop: Spacing.three, paddingBottom: Spacing.three },
   desktopTopBar: { flexDirection: 'row' },
   desktopBackButton: { alignSelf: 'center' },
   desktopLesson: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: Spacing.six,
-    paddingVertical: Spacing.six,
+    gap: 48,
+    paddingVertical: 48,
   },
+  shortDesktopLesson: { paddingVertical: Spacing.four },
   desktopIntroduction: { flex: 1, alignItems: 'flex-start', gap: Spacing.four },
-  desktopTitle: { textAlign: 'left', fontSize: 52, lineHeight: 60 },
-  desktopDescription: { textAlign: 'left', fontSize: 19, lineHeight: 29 },
+  desktopTitle: { textAlign: 'left', fontSize: 46, lineHeight: 54 },
+  desktopDescription: { textAlign: 'left', fontSize: 18, lineHeight: 27 },
 });
