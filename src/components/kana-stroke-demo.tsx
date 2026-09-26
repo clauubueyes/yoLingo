@@ -152,6 +152,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   shortCanvas: { maxWidth: 280 },
-  narrowCanvas: { maxWidth: 260, borderRadius: 22 },
-  shortNarrowCanvas: { maxWidth: 220 },
+  narrowCanvas: { maxWidth: 280, borderRadius: 22 },
+  shortNarrowCanvas: { maxWidth: 240 },
 });

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,10 +26,16 @@ export default function HiraganaALessonScreen() {
   const isShortDesktop = isDesktop && height < 800;
   const router = useRouter();
   const theme = useTheme();
+  const scrollRef = useRef<ScrollView>(null);
   const [replayKey, setReplayKey] = useState(0);
   const [phase, setPhase] = useState<LessonPhase>('demonstration');
   const [isDrawing, setIsDrawing] = useState(false);
   const [focusedButton, setFocusedButton] = useState<'replay' | 'practice' | null>(null);
+  const phaseStep = phase === 'demonstration' ? 1 : phase === 'writing' ? 2 : 3;
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [phase]);
 
   const repeatLesson = () => {
     setReplayKey((current) => current + 1);
@@ -40,6 +46,7 @@ export default function HiraganaALessonScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
+          ref={scrollRef}
           alwaysBounceVertical={false}
           scrollEnabled={!isDrawing}
           contentContainerStyle={[
@@ -61,7 +68,13 @@ export default function HiraganaALessonScreen() {
               style={isDesktop && styles.desktopBackButton}
             />
 
-            <View style={styles.brand}>
+            {isNarrow && phase !== 'result' && (
+              <ThemedText themeColor="textSecondary" style={styles.mobileProgress}>
+                Paso {phaseStep} de 3
+              </ThemedText>
+            )}
+
+            <View style={[styles.brand, isNarrow && styles.mobileHidden]}>
               <Image
                 accessible={false}
                 contentFit="contain"
@@ -87,7 +100,7 @@ export default function HiraganaALessonScreen() {
               isDesktop && styles.desktopLesson,
               isShortDesktop && styles.shortDesktopLesson,
             ]}>
-            {(isDesktop || phase === 'demonstration') && (
+            {(isDesktop || (!isNarrow && phase === 'demonstration')) && (
               <View
                 style={[
                   styles.introduction,
@@ -135,14 +148,24 @@ export default function HiraganaALessonScreen() {
                   <ThemedText
                     accessibilityRole="header"
                     style={[styles.cardTitle, isNarrow && styles.narrowCardTitle]}>
-                    {phase === 'writing' ? 'Tu turno' : `${hiraganaA.strokes.length} trazos`}
+                    {phase === 'writing'
+                      ? isNarrow
+                        ? `Escribe ${hiraganaA.symbol}`
+                        : 'Tu turno'
+                      : isNarrow
+                        ? `Conoce ${hiraganaA.symbol}`
+                        : `${hiraganaA.strokes.length} trazos`}
                   </ThemedText>
                   <ThemedText
                     themeColor="textSecondary"
                     style={[styles.hint, isNarrow && styles.narrowHint]}>
                     {phase === 'writing'
-                      ? 'Recuerda el orden: horizontal, vertical y trazo curvo.'
-                      : 'Observa el orden y la dirección de cada trazo.'}
+                      ? isNarrow
+                        ? 'Sigue el orden de los tres trazos.'
+                        : 'Recuerda el orden: horizontal, vertical y trazo curvo.'
+                      : isNarrow
+                        ? `Observa el orden y recuerda que se lee «${hiraganaA.reading}».`
+                        : 'Observa el orden y la dirección de cada trazo.'}
                   </ThemedText>
                 </View>
               )}
@@ -212,6 +235,7 @@ export default function HiraganaALessonScreen() {
                     }}
                     style={({ pressed }) => [
                       styles.secondaryButton,
+                      isNarrow && styles.narrowSecondaryButton,
                       {
                         borderColor: theme.accent,
                         backgroundColor: pressed ? theme.backgroundSelected : 'transparent',
@@ -223,13 +247,17 @@ export default function HiraganaALessonScreen() {
                         outlineOffset: 2,
                       },
                     ]}>
-                    <ThemedText style={styles.secondaryButtonLabel}>
+                    <ThemedText
+                      style={[
+                        styles.secondaryButtonLabel,
+                        isNarrow && styles.narrowSecondaryButtonLabel,
+                      ]}>
                       {phase === 'writing' ? 'VER DEMOSTRACIÓN' : 'REPRODUCIR DE NUEVO'}
                     </ThemedText>
                   </Pressable>
                 </View>
               )}
-              <ExternalLink href={hiraganaA.source.url}>
+              <ExternalLink href={hiraganaA.source.url} style={isNarrow && styles.narrowAttributionLink}>
                 <ThemedText themeColor="textSecondary" style={styles.attribution}>
                   Trazos: {hiraganaA.source.name} · {hiraganaA.source.license} ↗
                 </ThemedText>
@@ -250,6 +278,8 @@ const styles = StyleSheet.create({
   narrowContent: { padding: 12 },
   topBar: { width: '100%', alignItems: 'center', gap: Spacing.three },
   narrowTopBar: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },
+  mobileProgress: { fontSize: 13, lineHeight: 18, fontWeight: 700 },
+  mobileHidden: { display: 'none' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logo: { width: 50, aspectRatio: 62 / 53 },
   compactLogo: { width: 42 },
@@ -265,7 +295,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.four,
   },
   compactLesson: { gap: Spacing.four, paddingTop: Spacing.four },
-  narrowLesson: { gap: Spacing.three, paddingTop: Spacing.three, paddingBottom: Spacing.three },
+  narrowLesson: { gap: 0, paddingTop: 28, paddingBottom: 12 },
   introduction: { width: '100%', maxWidth: 540, alignItems: 'center', gap: Spacing.three },
   narrowIntroduction: { gap: Spacing.two },
   eyebrow: { fontSize: 14, lineHeight: 20, fontWeight: 800, letterSpacing: 1.2 },
@@ -287,12 +317,20 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
   },
   compactCharacterCard: { borderRadius: 26, padding: Spacing.three, gap: Spacing.three },
-  narrowCharacterCard: { minHeight: 0, borderRadius: 22, padding: 12, gap: 12 },
+  narrowCharacterCard: {
+    minHeight: 0,
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    padding: 0,
+    gap: 20,
+  },
   cardHeading: { alignItems: 'center', gap: Spacing.two },
   cardTitle: { fontSize: 28, lineHeight: 36, fontWeight: 800 },
-  narrowCardTitle: { fontSize: 24, lineHeight: 30 },
+  narrowCardTitle: { fontSize: 22, lineHeight: 28 },
   hint: { maxWidth: 320, textAlign: 'center', fontSize: 16, lineHeight: 24 },
-  narrowHint: { fontSize: 15, lineHeight: 21 },
+  narrowHint: { maxWidth: 280, fontSize: 15, lineHeight: 21 },
   actions: { width: '100%', gap: Spacing.three },
   narrowActions: { gap: Spacing.two },
   secondaryButton: {
@@ -305,6 +343,8 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
   },
   secondaryButtonLabel: { fontSize: 14, lineHeight: 20, fontWeight: 800, textAlign: 'center' },
+  narrowSecondaryButton: { minHeight: 44, borderWidth: 0, borderRadius: 14 },
+  narrowSecondaryButtonLabel: { fontSize: 13, lineHeight: 18 },
   primaryShadow: { width: '100%', paddingBottom: 7, borderRadius: 20 },
   primaryButton: {
     minHeight: 56,
@@ -317,6 +357,7 @@ const styles = StyleSheet.create({
   primaryButtonPressed: { transform: [{ translateY: 4 }] },
   primaryButtonLabel: { fontSize: 16, lineHeight: 22, fontWeight: 800, textAlign: 'center' },
   attribution: { fontSize: 13, lineHeight: 20, textDecorationLine: 'underline' },
+  narrowAttributionLink: { marginTop: 'auto' },
   desktopContent: {
     paddingHorizontal: 48,
     paddingTop: Spacing.four,

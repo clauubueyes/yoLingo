@@ -348,8 +348,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   shortCanvas: { maxWidth: 280 },
-  narrowCanvas: { maxWidth: 260, borderRadius: 22 },
-  shortNarrowCanvas: { maxWidth: 220 },
+  narrowCanvas: { maxWidth: 280, borderRadius: 22 },
+  shortNarrowCanvas: { maxWidth: 240 },
   controls: { width: '100%', flexDirection: 'row', gap: Spacing.three },
   feedback: { minHeight: 24, textAlign: 'center', fontSize: 15, lineHeight: 22, fontWeight: 700 },
   control: {
