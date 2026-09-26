@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Line, Path, Text as SvgText } from 'react-native-svg';
 
-import type { KanaCharacter, KanaStroke } from '@/domain/kana';
+import type { KanaCharacter, KanaStroke, StrokePoint } from '@/domain/kana';
 import { useTheme } from '@/hooks/use-theme';
 
 const DRAW_LENGTH = 240;
@@ -17,48 +17,92 @@ const STROKE_DELAY = 650;
 const STROKE_DURATION = 850;
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
+function ArrowHead({ color, end, previous }: { color: string; end: StrokePoint; previous: StrokePoint }) {
+  const length = Math.hypot(end.x - previous.x, end.y - previous.y) || 1;
+  const directionX = (end.x - previous.x) / length;
+  const directionY = (end.y - previous.y) / length;
+  const wingLength = 2.6;
+  const wingBack = 3.8;
+
+  return (
+    <>
+      <Line
+        x1={end.x}
+        y1={end.y}
+        x2={end.x - directionX * wingBack + directionY * wingLength}
+        y2={end.y - directionY * wingBack - directionX * wingLength}
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.2}
+      />
+      <Line
+        x1={end.x}
+        y1={end.y}
+        x2={end.x - directionX * wingBack - directionY * wingLength}
+        y2={end.y - directionY * wingBack + directionX * wingLength}
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.2}
+      />
+    </>
+  );
+}
+
 function StrokeDirection({ color, stroke }: { color: string; stroke: KanaStroke }) {
   const start = stroke.referencePoints[0];
   const next = stroke.referencePoints[Math.min(4, stroke.referencePoints.length - 1)];
   const length = Math.hypot(next.x - start.x, next.y - start.y) || 1;
   const directionX = (next.x - start.x) / length;
   const directionY = (next.y - start.y) / length;
-  const arrowStart = {
-    x: start.x - directionX * 11,
-    y: start.y - directionY * 11,
-  };
-  const wingLength = 3.5;
-  const wingBack = 4.5;
+  const arrowStart = { x: start.x - directionX * 15, y: start.y - directionY * 15 };
+  const arrowEnd = { x: start.x - directionX * 3.5, y: start.y - directionY * 3.5 };
+  const curvePoints = (stroke.referencePoints.length > 20
+    ? stroke.referencePoints.slice(12, 19)
+    : []
+  ).map((point) => {
+    const fromCenterX = point.x - 54.5;
+    const fromCenterY = point.y - 54.5;
+    const distance = Math.hypot(fromCenterX, fromCenterY) || 1;
+
+    return {
+      x: point.x + (fromCenterX / distance) * 8,
+      y: point.y + (fromCenterY / distance) * 8,
+    };
+  });
+  const curvePath =
+    curvePoints.length > 1
+      ? `M${curvePoints[0].x},${curvePoints[0].y} C${curvePoints[1].x},${curvePoints[1].y} ${curvePoints[2].x},${curvePoints[2].y} ${curvePoints[3].x},${curvePoints[3].y} S${curvePoints[5].x},${curvePoints[5].y} ${curvePoints[6].x},${curvePoints[6].y}`
+      : '';
 
   return (
     <>
       <Line
         x1={arrowStart.x}
         y1={arrowStart.y}
-        x2={start.x}
-        y2={start.y}
+        x2={arrowEnd.x}
+        y2={arrowEnd.y}
         stroke={color}
         strokeLinecap="round"
-        strokeWidth={1.4}
+        strokeWidth={1.2}
       />
-      <Line
-        x1={start.x}
-        y1={start.y}
-        x2={start.x - directionX * wingBack + directionY * wingLength}
-        y2={start.y - directionY * wingBack - directionX * wingLength}
-        stroke={color}
-        strokeLinecap="round"
-        strokeWidth={1.4}
-      />
-      <Line
-        x1={start.x}
-        y1={start.y}
-        x2={start.x - directionX * wingBack - directionY * wingLength}
-        y2={start.y - directionY * wingBack + directionX * wingLength}
-        stroke={color}
-        strokeLinecap="round"
-        strokeWidth={1.4}
-      />
+      <ArrowHead color={color} end={arrowEnd} previous={arrowStart} />
+      {curvePoints.length > 1 && (
+        <>
+          <Path
+            d={curvePath}
+            fill="none"
+            stroke={color}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.2}
+          />
+          <ArrowHead
+            color={color}
+            end={curvePoints[curvePoints.length - 1]}
+            previous={curvePoints[curvePoints.length - 2]}
+          />
+        </>
+      )}
     </>
   );
 }
@@ -66,12 +110,13 @@ function StrokeDirection({ color, stroke }: { color: string; stroke: KanaStroke 
 type AnimatedStrokeProps = {
   color: string;
   index: number;
+  labelColor: string;
   replayKey: number;
   shouldReduceMotion: boolean;
   stroke: KanaStroke;
 };
 
-function AnimatedStroke({ color, index, replayKey, shouldReduceMotion, stroke }: AnimatedStrokeProps) {
+function AnimatedStroke({ color, index, labelColor, replayKey, shouldReduceMotion, stroke }: AnimatedStrokeProps) {
   const progress = useSharedValue(shouldReduceMotion ? 1 : 0);
 
   useEffect(() => {
@@ -104,7 +149,7 @@ function AnimatedStroke({ color, index, replayKey, shouldReduceMotion, stroke }:
         strokeWidth={5}
       />
       <SvgText
-        fill={color}
+        fill={labelColor}
         fontSize={9}
         fontWeight="700"
         textAnchor="middle"
@@ -180,6 +225,7 @@ export function KanaStrokeDemo({ character, replayKey, showComplete = false }: K
             <AnimatedStroke
               color={theme.text}
               index={index}
+              labelColor={theme.decorationOrange}
               replayKey={replayKey}
               shouldReduceMotion={shouldReduceMotion || showComplete}
               stroke={stroke}
