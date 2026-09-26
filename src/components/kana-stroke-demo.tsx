@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
@@ -16,6 +16,52 @@ const DRAW_LENGTH = 240;
 const STROKE_DELAY = 650;
 const STROKE_DURATION = 850;
 const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+function StrokeDirection({ color, stroke }: { color: string; stroke: KanaStroke }) {
+  const start = stroke.referencePoints[0];
+  const next = stroke.referencePoints[Math.min(4, stroke.referencePoints.length - 1)];
+  const length = Math.hypot(next.x - start.x, next.y - start.y) || 1;
+  const directionX = (next.x - start.x) / length;
+  const directionY = (next.y - start.y) / length;
+  const arrowStart = {
+    x: start.x - directionX * 11,
+    y: start.y - directionY * 11,
+  };
+  const wingLength = 3.5;
+  const wingBack = 4.5;
+
+  return (
+    <>
+      <Line
+        x1={arrowStart.x}
+        y1={arrowStart.y}
+        x2={start.x}
+        y2={start.y}
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.4}
+      />
+      <Line
+        x1={start.x}
+        y1={start.y}
+        x2={start.x - directionX * wingBack + directionY * wingLength}
+        y2={start.y - directionY * wingBack - directionX * wingLength}
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.4}
+      />
+      <Line
+        x1={start.x}
+        y1={start.y}
+        x2={start.x - directionX * wingBack - directionY * wingLength}
+        y2={start.y - directionY * wingBack + directionX * wingLength}
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.4}
+      />
+    </>
+  );
+}
 
 type AnimatedStrokeProps = {
   color: string;
@@ -94,7 +140,7 @@ export function KanaStrokeDemo({ character, replayKey, showComplete = false }: K
 
   return (
     <View
-      accessibilityLabel={`${character.symbol}, ${character.strokes.length} trazos mostrados en orden`}
+      accessibilityLabel={`${character.symbol}, ${character.strokes.length} trazos mostrados en orden con flechas de dirección`}
       accessibilityRole="image"
       style={[
         styles.canvas,
@@ -129,14 +175,16 @@ export function KanaStrokeDemo({ character, replayKey, showComplete = false }: K
           y2={height / 2}
         />
         {character.strokes.map((stroke, index) => (
-          <AnimatedStroke
-            color={theme.text}
-            index={index}
-            key={stroke.number}
-            replayKey={replayKey}
-            shouldReduceMotion={shouldReduceMotion || showComplete}
-            stroke={stroke}
-          />
+          <Fragment key={stroke.number}>
+            <StrokeDirection color={theme.decorationOrange} stroke={stroke} />
+            <AnimatedStroke
+              color={theme.text}
+              index={index}
+              replayKey={replayKey}
+              shouldReduceMotion={shouldReduceMotion || showComplete}
+              stroke={stroke}
+            />
+          </Fragment>
         ))}
       </Svg>
     </View>

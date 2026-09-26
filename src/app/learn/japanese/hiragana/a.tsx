@@ -143,6 +143,7 @@ export default function HiraganaALessonScreen() {
                 isCompact && styles.compactCharacterCard,
                 isNarrow && styles.narrowCharacterCard,
               ]}>
+              <View style={[styles.stageContent, isNarrow && styles.narrowStageContent]}>
               {(phase === 'demonstration' || phase === 'writing') && (
                 <View style={styles.cardHeading}>
                   <ThemedText
@@ -257,6 +258,7 @@ export default function HiraganaALessonScreen() {
                   </Pressable>
                 </View>
               )}
+              </View>
               <ExternalLink href={hiraganaA.source.url} style={isNarrow && styles.narrowAttributionLink}>
                 <ThemedText themeColor="textSecondary" style={styles.attribution}>
                   Trazos: {hiraganaA.source.name} · {hiraganaA.source.license} ↗
@@ -326,6 +328,8 @@ const styles = StyleSheet.create({
     padding: 0,
     gap: 20,
   },
+  stageContent: { width: '100%', alignItems: 'center', gap: Spacing.four },
+  narrowStageContent: { flexGrow: 1, justifyContent: 'center', gap: 20 },
   cardHeading: { alignItems: 'center', gap: Spacing.two },
   cardTitle: { fontSize: 28, lineHeight: 36, fontWeight: 800 },
   narrowCardTitle: { fontSize: 22, lineHeight: 28 },
@@ -357,7 +361,7 @@ const styles = StyleSheet.create({
   primaryButtonPressed: { transform: [{ translateY: 4 }] },
   primaryButtonLabel: { fontSize: 16, lineHeight: 22, fontWeight: 800, textAlign: 'center' },
   attribution: { fontSize: 13, lineHeight: 20, textDecorationLine: 'underline' },
-  narrowAttributionLink: { marginTop: 'auto' },
+  narrowAttributionLink: { alignSelf: 'center' },
   desktopContent: {
     paddingHorizontal: 48,
     paddingTop: Spacing.four,
