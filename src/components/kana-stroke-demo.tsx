@@ -78,7 +78,7 @@ type KanaStrokeDemoProps = {
 
 export function KanaStrokeDemo({ character, replayKey, showComplete = false }: KanaStrokeDemoProps) {
   const theme = useTheme();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
   const [minX, minY, width, height] = character.viewBox;
 
@@ -99,6 +99,8 @@ export function KanaStrokeDemo({ character, replayKey, showComplete = false }: K
       style={[
         styles.canvas,
         windowHeight < 800 && styles.shortCanvas,
+        windowWidth < 480 && styles.narrowCanvas,
+        windowHeight < 700 && windowWidth < 480 && styles.shortNarrowCanvas,
         { backgroundColor: theme.backgroundSelected },
       ]}>
       <Svg
@@ -150,4 +152,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   shortCanvas: { maxWidth: 280 },
+  narrowCanvas: { maxWidth: 260, borderRadius: 22 },
+  shortNarrowCanvas: { maxWidth: 220 },
 });

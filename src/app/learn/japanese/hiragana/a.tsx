@@ -20,7 +20,9 @@ type LessonPhase = 'demonstration' | 'writing' | 'recognition' | 'result';
 export default function HiraganaALessonScreen() {
   const { height, width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 960;
+  const isNarrow = width < 480;
   const isCompact = width < 480 || height < 800;
+  const isShortMobile = isNarrow && height < 700;
   const isShortDesktop = isDesktop && height < 800;
   const router = useRouter();
   const theme = useTheme();
@@ -43,10 +45,16 @@ export default function HiraganaALessonScreen() {
           contentContainerStyle={[
             styles.content,
             isCompact && styles.compactContent,
+            isNarrow && styles.narrowContent,
             isDesktop && styles.desktopContent,
             isShortDesktop && styles.shortDesktopContent,
           ]}>
-          <View style={[styles.topBar, isDesktop && styles.desktopTopBar]}>
+          <View
+            style={[
+              styles.topBar,
+              isNarrow && styles.narrowTopBar,
+              isDesktop && styles.desktopTopBar,
+            ]}>
             <BackButton
               accessibilityLabel="Volver a seleccionar idioma"
               fallbackHref="/select-language"
@@ -58,9 +66,14 @@ export default function HiraganaALessonScreen() {
                 accessible={false}
                 contentFit="contain"
                 source={require('@/assets/images/welcome/logo.png')}
-                style={[styles.logo, isCompact && styles.compactLogo]}
+                style={[styles.logo, isCompact && styles.compactLogo, isNarrow && styles.narrowLogo]}
               />
-              <ThemedText style={[styles.brandName, isCompact && styles.compactBrandName]}>
+              <ThemedText
+                style={[
+                  styles.brandName,
+                  isCompact && styles.compactBrandName,
+                  isNarrow && styles.narrowBrandName,
+                ]}>
                 yoLingo
               </ThemedText>
             </View>
@@ -70,12 +83,20 @@ export default function HiraganaALessonScreen() {
             style={[
               styles.lesson,
               isCompact && styles.compactLesson,
+              isNarrow && styles.narrowLesson,
               isDesktop && styles.desktopLesson,
               isShortDesktop && styles.shortDesktopLesson,
             ]}>
             {(isDesktop || phase === 'demonstration') && (
-              <View style={[styles.introduction, isDesktop && styles.desktopIntroduction]}>
-                <ThemedText themeColor="decorationPurple" style={styles.eyebrow}>
+              <View
+                style={[
+                  styles.introduction,
+                  isNarrow && styles.narrowIntroduction,
+                  isDesktop && styles.desktopIntroduction,
+                ]}>
+                <ThemedText
+                  themeColor="decorationPurple"
+                  style={[styles.eyebrow, isNarrow && styles.narrowEyebrow]}>
                   HIRAGANA · PRIMERA LECCIÓN
                 </ThemedText>
                 <ThemedText
@@ -83,13 +104,19 @@ export default function HiraganaALessonScreen() {
                   style={[
                     styles.title,
                     isCompact && styles.compactTitle,
+                    isNarrow && styles.narrowTitle,
                     isDesktop && styles.desktopTitle,
                   ]}>
                   Conoce {hiraganaA.symbol}
                 </ThemedText>
                 <ThemedText
                   themeColor="textSecondary"
-                  style={[styles.description, isDesktop && styles.desktopDescription]}>
+                  style={[
+                    styles.description,
+                    isNarrow && styles.narrowDescription,
+                    isShortMobile && styles.shortMobileDescription,
+                    isDesktop && styles.desktopDescription,
+                  ]}>
                   {hiraganaA.symbol} representa el sonido «{hiraganaA.reading}», como en «casa». Es la
                   primera vocal que aprenderás a reconocer y escribir.
                 </ThemedText>
@@ -98,13 +125,21 @@ export default function HiraganaALessonScreen() {
 
             <ThemedView
               type="backgroundElement"
-              style={[styles.characterCard, isCompact && styles.compactCharacterCard]}>
+              style={[
+                styles.characterCard,
+                isCompact && styles.compactCharacterCard,
+                isNarrow && styles.narrowCharacterCard,
+              ]}>
               {(phase === 'demonstration' || phase === 'writing') && (
                 <View style={styles.cardHeading}>
-                  <ThemedText accessibilityRole="header" style={styles.cardTitle}>
+                  <ThemedText
+                    accessibilityRole="header"
+                    style={[styles.cardTitle, isNarrow && styles.narrowCardTitle]}>
                     {phase === 'writing' ? 'Tu turno' : `${hiraganaA.strokes.length} trazos`}
                   </ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.hint}>
+                  <ThemedText
+                    themeColor="textSecondary"
+                    style={[styles.hint, isNarrow && styles.narrowHint]}>
                     {phase === 'writing'
                       ? 'Recuerda el orden: horizontal, vertical y trazo curvo.'
                       : 'Observa el orden y la dirección de cada trazo.'}
@@ -137,7 +172,36 @@ export default function HiraganaALessonScreen() {
               )}
 
               {(phase === 'demonstration' || phase === 'writing') && (
-                <View style={styles.actions}>
+                <View style={[styles.actions, isNarrow && styles.narrowActions]}>
+                  {phase === 'demonstration' && (
+                    <View
+                      style={[
+                        styles.primaryShadow,
+                        { backgroundColor: theme.accentShadow },
+                      ]}>
+                      <Pressable
+                        accessibilityRole="button"
+                        onBlur={() => setFocusedButton(null)}
+                        onFocus={() => setFocusedButton('practice')}
+                        onPress={() => setPhase('writing')}
+                        style={({ pressed }) => [
+                          styles.primaryButton,
+                          { backgroundColor: pressed ? theme.accentPressed : theme.accent },
+                          pressed && styles.primaryButtonPressed,
+                          Platform.OS === 'web' && focusedButton === 'practice' && {
+                            outlineColor: theme.focusRing,
+                            outlineStyle: 'solid',
+                            outlineWidth: 3,
+                            outlineOffset: 2,
+                          },
+                        ]}>
+                        <ThemedText style={[styles.primaryButtonLabel, { color: theme.accentText }]}>
+                          COMENZAR PRÁCTICA
+                        </ThemedText>
+                      </Pressable>
+                    </View>
+                  )}
+
                   <Pressable
                     accessibilityRole="button"
                     onBlur={() => setFocusedButton(null)}
@@ -163,31 +227,6 @@ export default function HiraganaALessonScreen() {
                       {phase === 'writing' ? 'VER DEMOSTRACIÓN' : 'REPRODUCIR DE NUEVO'}
                     </ThemedText>
                   </Pressable>
-
-                  {phase === 'demonstration' && (
-                  <View style={[styles.primaryShadow, { backgroundColor: theme.accentShadow }]}>
-                    <Pressable
-                      accessibilityRole="button"
-                      onBlur={() => setFocusedButton(null)}
-                      onFocus={() => setFocusedButton('practice')}
-                      onPress={() => setPhase('writing')}
-                      style={({ pressed }) => [
-                        styles.primaryButton,
-                        { backgroundColor: pressed ? theme.accentPressed : theme.accent },
-                        pressed && styles.primaryButtonPressed,
-                        Platform.OS === 'web' && focusedButton === 'practice' && {
-                          outlineColor: theme.focusRing,
-                          outlineStyle: 'solid',
-                          outlineWidth: 3,
-                          outlineOffset: 2,
-                        },
-                      ]}>
-                      <ThemedText style={[styles.primaryButtonLabel, { color: theme.accentText }]}>
-                        COMENZAR PRÁCTICA
-                      </ThemedText>
-                    </Pressable>
-                  </View>
-                  )}
                 </View>
               )}
               <ExternalLink href={hiraganaA.source.url}>
@@ -208,12 +247,16 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, width: '100%', maxWidth: 1280 },
   content: { flexGrow: 1, padding: Spacing.four },
   compactContent: { padding: Spacing.three },
+  narrowContent: { padding: 12 },
   topBar: { width: '100%', alignItems: 'center', gap: Spacing.three },
+  narrowTopBar: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logo: { width: 50, aspectRatio: 62 / 53 },
   compactLogo: { width: 42 },
+  narrowLogo: { width: 34 },
   brandName: { fontSize: 40, lineHeight: 46, fontWeight: 800 },
   compactBrandName: { fontSize: 34, lineHeight: 40 },
+  narrowBrandName: { fontSize: 28, lineHeight: 34 },
   lesson: {
     flexGrow: 1,
     alignItems: 'center',
@@ -222,11 +265,17 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.four,
   },
   compactLesson: { gap: Spacing.four, paddingTop: Spacing.four },
+  narrowLesson: { gap: Spacing.three, paddingTop: Spacing.three, paddingBottom: Spacing.three },
   introduction: { width: '100%', maxWidth: 540, alignItems: 'center', gap: Spacing.three },
+  narrowIntroduction: { gap: Spacing.two },
   eyebrow: { fontSize: 14, lineHeight: 20, fontWeight: 800, letterSpacing: 1.2 },
+  narrowEyebrow: { fontSize: 12, lineHeight: 17, letterSpacing: 1 },
   title: { textAlign: 'center', fontSize: 40, lineHeight: 48, fontWeight: 800 },
   compactTitle: { fontSize: 34, lineHeight: 41 },
+  narrowTitle: { fontSize: 30, lineHeight: 36 },
   description: { textAlign: 'center', fontSize: 17, lineHeight: 26 },
+  narrowDescription: { fontSize: 15, lineHeight: 22 },
+  shortMobileDescription: { display: 'none' },
   characterCard: {
     width: '100%',
     maxWidth: 440,
@@ -238,10 +287,14 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
   },
   compactCharacterCard: { borderRadius: 26, padding: Spacing.three, gap: Spacing.three },
+  narrowCharacterCard: { minHeight: 0, borderRadius: 22, padding: 12, gap: 12 },
   cardHeading: { alignItems: 'center', gap: Spacing.two },
   cardTitle: { fontSize: 28, lineHeight: 36, fontWeight: 800 },
+  narrowCardTitle: { fontSize: 24, lineHeight: 30 },
   hint: { maxWidth: 320, textAlign: 'center', fontSize: 16, lineHeight: 24 },
+  narrowHint: { fontSize: 15, lineHeight: 21 },
   actions: { width: '100%', gap: Spacing.three },
+  narrowActions: { gap: Spacing.two },
   secondaryButton: {
     minHeight: 52,
     borderWidth: 2,

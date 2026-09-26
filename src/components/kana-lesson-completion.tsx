@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -16,17 +16,23 @@ type KanaRecognitionQuizProps = {
 
 export function KanaRecognitionQuiz({ character, onComplete }: KanaRecognitionQuizProps) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 480;
   const [selectedReading, setSelectedReading] = useState<string | null>(null);
   const [focusedReading, setFocusedReading] = useState<string | null>(null);
   const [isContinueFocused, setIsContinueFocused] = useState(false);
   const isCorrect = selectedReading === character.reading;
 
   return (
-    <View style={styles.step}>
-      <ThemedText accessibilityLabel={`Hiragana ${character.reading}`} style={styles.character}>
+    <View style={[styles.step, isNarrow && styles.narrowStep]}>
+      <ThemedText
+        accessibilityLabel={`Hiragana ${character.reading}`}
+        style={[styles.character, isNarrow && styles.narrowCharacter]}>
         {character.symbol}
       </ThemedText>
-      <ThemedText accessibilityRole="header" style={styles.question}>
+      <ThemedText
+        accessibilityRole="header"
+        style={[styles.question, isNarrow && styles.narrowQuestion]}>
         ¿Cómo se lee {character.symbol}?
       </ThemedText>
 
@@ -124,16 +130,24 @@ export function KanaLessonResult({
   onReturnToLanguages,
 }: KanaLessonResultProps) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 480;
   const [focusedButton, setFocusedButton] = useState<'languages' | 'repeat' | null>(null);
 
   return (
-    <View style={styles.step}>
-      <ThemedView type="backgroundSelected" style={styles.resultCharacterBadge}>
-        <ThemedText accessibilityLabel={`Hiragana ${character.reading}`} style={styles.resultCharacter}>
+    <View style={[styles.step, isNarrow && styles.narrowStep]}>
+      <ThemedView
+        type="backgroundSelected"
+        style={[styles.resultCharacterBadge, isNarrow && styles.narrowResultCharacterBadge]}>
+        <ThemedText
+          accessibilityLabel={`Hiragana ${character.reading}`}
+          style={[styles.resultCharacter, isNarrow && styles.narrowResultCharacter]}>
           {character.symbol}
         </ThemedText>
       </ThemedView>
-      <ThemedText accessibilityRole="header" style={styles.resultTitle}>
+      <ThemedText
+        accessibilityRole="header"
+        style={[styles.resultTitle, isNarrow && styles.narrowResultTitle]}>
         Lección completada
       </ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.resultDescription}>
@@ -208,8 +222,11 @@ function ResultRow({ label }: { label: string }) {
 
 const styles = StyleSheet.create({
   step: { width: '100%', alignItems: 'center', gap: Spacing.four },
+  narrowStep: { gap: Spacing.three },
   character: { fontSize: 88, lineHeight: 102, fontWeight: 700 },
+  narrowCharacter: { fontSize: 72, lineHeight: 84 },
   question: { fontSize: 24, lineHeight: 31, fontWeight: 800, textAlign: 'center' },
+  narrowQuestion: { fontSize: 22, lineHeight: 28 },
   options: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three },
   option: {
     width: '47%',
@@ -242,7 +259,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   resultCharacter: { fontSize: 54, lineHeight: 68, fontWeight: 700 },
+  narrowResultCharacterBadge: { width: 72, height: 72, borderRadius: 22 },
+  narrowResultCharacter: { fontSize: 46, lineHeight: 58 },
   resultTitle: { fontSize: 28, lineHeight: 35, fontWeight: 800, textAlign: 'center' },
+  narrowResultTitle: { fontSize: 24, lineHeight: 31 },
   resultDescription: { fontSize: 16, lineHeight: 24, textAlign: 'center' },
   resultList: { width: '100%', gap: Spacing.three },
   resultRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },

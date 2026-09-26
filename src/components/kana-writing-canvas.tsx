@@ -114,7 +114,7 @@ export function KanaWritingCanvas({
   onDrawingChange,
 }: KanaWritingCanvasProps) {
   const theme = useTheme();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const [canvasSize, setCanvasSize] = useState<CanvasSize>({ width: 1, height: 1 });
   const [drawing, dispatch] = useReducer(drawingReducer, initialDrawingState);
   const {
@@ -187,6 +187,8 @@ export function KanaWritingCanvas({
         style={[
           styles.canvas,
           windowHeight < 800 && styles.shortCanvas,
+          windowWidth < 480 && styles.narrowCanvas,
+          windowHeight < 700 && windowWidth < 480 && styles.shortNarrowCanvas,
           Platform.OS === 'web' && webCanvasStyle,
           { backgroundColor: theme.backgroundSelected, borderColor: theme.accent },
         ]}>
@@ -346,6 +348,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   shortCanvas: { maxWidth: 280 },
+  narrowCanvas: { maxWidth: 260, borderRadius: 22 },
+  shortNarrowCanvas: { maxWidth: 220 },
   controls: { width: '100%', flexDirection: 'row', gap: Spacing.three },
   feedback: { minHeight: 24, textAlign: 'center', fontSize: 15, lineHeight: 22, fontWeight: 700 },
   control: {
