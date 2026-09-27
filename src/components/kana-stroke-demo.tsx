@@ -33,7 +33,7 @@ function ArrowHead({ color, end, previous }: { color: string; end: StrokePoint; 
         y2={end.y - directionY * wingBack - directionX * wingLength}
         stroke={color}
         strokeLinecap="round"
-        strokeWidth={1.2}
+        strokeWidth={0.8}
       />
       <Line
         x1={end.x}
@@ -42,67 +42,28 @@ function ArrowHead({ color, end, previous }: { color: string; end: StrokePoint; 
         y2={end.y - directionY * wingBack + directionX * wingLength}
         stroke={color}
         strokeLinecap="round"
-        strokeWidth={1.2}
+        strokeWidth={0.8}
       />
     </>
   );
 }
 
 function StrokeDirection({ color, stroke }: { color: string; stroke: KanaStroke }) {
-  const start = stroke.referencePoints[0];
-  const next = stroke.referencePoints[Math.min(4, stroke.referencePoints.length - 1)];
-  const length = Math.hypot(next.x - start.x, next.y - start.y) || 1;
-  const directionX = (next.x - start.x) / length;
-  const directionY = (next.y - start.y) / length;
-  const arrowStart = { x: start.x - directionX * 15, y: start.y - directionY * 15 };
-  const arrowEnd = { x: start.x - directionX * 3.5, y: start.y - directionY * 3.5 };
-  const curvePoints = (stroke.referencePoints.length > 20
-    ? stroke.referencePoints.slice(12, 19)
-    : []
-  ).map((point) => {
-    const fromCenterX = point.x - 54.5;
-    const fromCenterY = point.y - 54.5;
-    const distance = Math.hypot(fromCenterX, fromCenterY) || 1;
-
-    return {
-      x: point.x + (fromCenterX / distance) * 8,
-      y: point.y + (fromCenterY / distance) * 8,
-    };
-  });
-  const curvePath =
-    curvePoints.length > 1
-      ? `M${curvePoints[0].x},${curvePoints[0].y} C${curvePoints[1].x},${curvePoints[1].y} ${curvePoints[2].x},${curvePoints[2].y} ${curvePoints[3].x},${curvePoints[3].y} S${curvePoints[5].x},${curvePoints[5].y} ${curvePoints[6].x},${curvePoints[6].y}`
-      : '';
-
   return (
     <>
-      <Line
-        x1={arrowStart.x}
-        y1={arrowStart.y}
-        x2={arrowEnd.x}
-        y2={arrowEnd.y}
-        stroke={color}
-        strokeLinecap="round"
-        strokeWidth={1.2}
-      />
-      <ArrowHead color={color} end={arrowEnd} previous={arrowStart} />
-      {curvePoints.length > 1 && (
-        <>
+      {stroke.directionGuides?.map((guide) => (
+        <Fragment key={guide.path}>
           <Path
-            d={curvePath}
+            d={guide.path}
             fill="none"
             stroke={color}
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={1.2}
+            strokeWidth={0.8}
           />
-          <ArrowHead
-            color={color}
-            end={curvePoints[curvePoints.length - 1]}
-            previous={curvePoints[curvePoints.length - 2]}
-          />
-        </>
-      )}
+          <ArrowHead color={color} end={guide.end} previous={guide.previous} />
+        </Fragment>
+      ))}
     </>
   );
 }
@@ -150,8 +111,8 @@ function AnimatedStroke({ color, index, labelColor, replayKey, shouldReduceMotio
       />
       <SvgText
         fill={labelColor}
-        fontSize={9}
-        fontWeight="700"
+        fontSize={7}
+        fontWeight="500"
         textAnchor="middle"
         x={stroke.labelPosition.x}
         y={stroke.labelPosition.y}>

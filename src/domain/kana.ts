@@ -8,6 +8,11 @@ export type KanaStroke = Readonly<{
   path: string;
   labelPosition: StrokePoint;
   referencePoints: readonly StrokePoint[];
+  directionGuides?: readonly Readonly<{
+    path: string;
+    end: StrokePoint;
+    previous: StrokePoint;
+  }>[];
 }>;
 
 export type KanaCharacter = Readonly<{

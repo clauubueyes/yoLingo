@@ -10,7 +10,10 @@ export const hiraganaA: KanaCharacter = {
     {
       number: 1,
       path: 'M31.01,33c0.88,0.88,2.75,1.82,5.25,1.75c8.62-0.25,20-2.12,29.5-4.25c1.51-0.34,4.62-0.88,6.62-0.5',
-      labelPosition: { x: 22.51, y: 35 },
+      labelPosition: { x: 18, y: 22 },
+      directionGuides: [
+        { path: 'M14,26 L35,26', previous: { x: 14, y: 26 }, end: { x: 35, y: 26 } },
+      ],
       referencePoints: [
         { x: 31.01, y: 33 },
         { x: 31.65, y: 33.53 },
@@ -33,7 +36,10 @@ export const hiraganaA: KanaCharacter = {
     {
       number: 2,
       path: 'M49.76,17.62c0.88,1,1.82,3.26,1.38,5.25c-3.75,16.75-6.25,38.13-5.13,53.63c0.41,5.7,1.88,10.88,3.38,13.62',
-      labelPosition: { x: 41.51, y: 19 },
+      labelPosition: { x: 66, y: 12 },
+      directionGuides: [
+        { path: 'M61,6 L57,22', previous: { x: 61, y: 6 }, end: { x: 57, y: 22 } },
+      ],
       referencePoints: [
         { x: 49.76, y: 17.62 },
         { x: 50.28, y: 18.36 },
@@ -56,7 +62,15 @@ export const hiraganaA: KanaCharacter = {
     {
       number: 3,
       path: 'M65.63,44.12c0.75,1.12,1.16,4.39,0.5,6.12c-4.62,12.26-11.24,23.76-25.37,35.76c-6.86,5.83-15.88,3.75-16.25-8.38c-0.34-10.87,13.38-23.12,32.38-26.74c12.42-2.37,27,1.38,30.5,12.75c4.05,13.18-3.76,26.37-20.88,30.49',
-      labelPosition: { x: 57.51, y: 42 },
+      labelPosition: { x: 83, y: 40 },
+      directionGuides: [
+        { path: 'M77,38 L73,47', previous: { x: 77, y: 38 }, end: { x: 73, y: 47 } },
+        {
+          path: 'M37,99 C14,103 9,84 17,64',
+          previous: { x: 9, y: 84 },
+          end: { x: 17, y: 64 },
+        },
+      ],
       referencePoints: [
         { x: 65.63, y: 44.12 },
         { x: 66.03, y: 45.02 },
