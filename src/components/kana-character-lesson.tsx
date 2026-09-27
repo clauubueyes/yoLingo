@@ -66,8 +66,8 @@ export function KanaCharacterLesson({ character, onReturnToPath }: KanaCharacter
               isDesktop && styles.desktopTopBar,
             ]}>
             <BackButton
-              accessibilityLabel="Volver a seleccionar idioma"
-              fallbackHref="/select-language"
+              accessibilityLabel="Volver a la ruta de Hiragana"
+              fallbackHref="/learn/japanese/hiragana"
               style={isDesktop && styles.desktopBackButton}
             />
 
@@ -113,7 +113,7 @@ export function KanaCharacterLesson({ character, onReturnToPath }: KanaCharacter
                 <ThemedText
                   themeColor="decorationPurple"
                   style={[styles.eyebrow, isNarrow && styles.narrowEyebrow]}>
-                  HIRAGANA · PRIMERA LECCIÓN
+                  HIRAGANA · {character.lessonLabel}
                 </ThemedText>
                 <ThemedText
                   accessibilityRole="header"

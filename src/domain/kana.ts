@@ -19,6 +19,7 @@ export type KanaCharacter = Readonly<{
   id: string;
   symbol: string;
   reading: string;
+  lessonLabel: string;
   introduction: string;
   writingHint: string;
   system: 'hiragana' | 'katakana';
