@@ -164,7 +164,7 @@ export function KanaCharacterLesson({ character, onReturnToPath }: KanaCharacter
                     style={[styles.hint, isNarrow && styles.narrowHint]}>
                     {phase === 'writing'
                       ? isNarrow
-                        ? 'Sigue el orden de los tres trazos.'
+                        ? `Sigue el orden de los ${character.strokes.length} trazos.`
                         : character.writingHint
                       : isNarrow
                         ? `Observa el orden y recuerda que se lee «${character.reading}».`

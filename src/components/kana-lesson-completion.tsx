@@ -155,7 +155,9 @@ export function KanaLessonResult({
       </ThemedText>
 
       <View style={styles.resultList}>
-        <ResultRow label={`Has escrito ${character.symbol} siguiendo sus tres trazos`} />
+        <ResultRow
+          label={`Has escrito ${character.symbol} siguiendo sus ${character.strokes.length} trazos`}
+        />
         <ResultRow label={`Has reconocido que ${character.symbol} se lee «${character.reading}»`} />
       </View>
 
