@@ -4,6 +4,8 @@ export const hiraganaA: KanaCharacter = {
   id: 'hiragana-a',
   symbol: 'あ',
   reading: 'a',
+  introduction: 'あ representa el sonido «a», como en «casa». Es la primera vocal que aprenderás a reconocer y escribir.',
+  writingHint: 'Recuerda el orden: horizontal, vertical y trazo curvo.',
   system: 'hiragana',
   viewBox: [0, 0, 109, 109],
   strokes: [
@@ -118,6 +120,8 @@ export const hiraganaI: KanaCharacter = {
   id: 'hiragana-i',
   symbol: 'い',
   reading: 'i',
+  introduction: 'い representa el sonido «i». Aprenderás a reconocerlo y a escribir sus dos trazos en orden.',
+  writingHint: 'Traza primero el lado izquierdo y después el derecho.',
   system: 'hiragana',
   viewBox: [0, 0, 109, 109],
   strokes: [

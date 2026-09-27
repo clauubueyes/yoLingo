@@ -19,6 +19,8 @@ export type KanaCharacter = Readonly<{
   id: string;
   symbol: string;
   reading: string;
+  introduction: string;
+  writingHint: string;
   system: 'hiragana' | 'katakana';
   viewBox: readonly [number, number, number, number];
   strokes: readonly KanaStroke[];
