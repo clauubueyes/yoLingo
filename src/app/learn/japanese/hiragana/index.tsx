@@ -24,24 +24,33 @@ export default function HiraganaPathScreen() {
   const hasCompletedI = completedCharacters.includes('i');
   const hasCompletedU = completedCharacters.includes('u');
   const hasCompletedE = completedCharacters.includes('e');
+  const hasCompletedO = completedCharacters.includes('o');
   const vowelProgress =
-    Number(hasCompletedA) + Number(hasCompletedI) + Number(hasCompletedU) + Number(hasCompletedE);
-  const nextLessonHref = hasCompletedU
-    ? '/learn/japanese/hiragana/e'
-    : hasCompletedI
-      ? '/learn/japanese/hiragana/u'
-      : hasCompletedA
-        ? '/learn/japanese/hiragana/i'
-        : '/learn/japanese/hiragana/a';
-  const vowelActionHint = hasCompletedE
-    ? 'Repite la lección de え'
+    Number(hasCompletedA) +
+    Number(hasCompletedI) +
+    Number(hasCompletedU) +
+    Number(hasCompletedE) +
+    Number(hasCompletedO);
+  const nextLessonHref = hasCompletedE
+    ? '/learn/japanese/hiragana/o'
     : hasCompletedU
-      ? 'Abre la lección de え'
+      ? '/learn/japanese/hiragana/e'
       : hasCompletedI
-        ? 'Abre la lección de う'
+        ? '/learn/japanese/hiragana/u'
         : hasCompletedA
-          ? 'Abre la lección de い'
-          : 'Abre la primera lección de Vocales';
+          ? '/learn/japanese/hiragana/i'
+          : '/learn/japanese/hiragana/a';
+  const vowelActionHint = hasCompletedO
+    ? 'Repite la lección de お'
+    : hasCompletedE
+      ? 'Abre la lección de お'
+      : hasCompletedU
+        ? 'Abre la lección de え'
+        : hasCompletedI
+          ? 'Abre la lección de う'
+          : hasCompletedA
+            ? 'Abre la lección de い'
+            : 'Abre la primera lección de Vocales';
 
   return (
     <ThemedView style={styles.container}>
@@ -79,29 +88,37 @@ export default function HiraganaPathScreen() {
 
               <ThemedView type="backgroundSelected" style={styles.nextStep}>
                 <ThemedText style={styles.nextStepLabel}>
-                  {vowelProgress ? 'VOCALES EN CURSO' : 'TU PRÓXIMO PASO'}
+                  {hasCompletedO
+                    ? 'VOCALES COMPLETADAS'
+                    : vowelProgress
+                      ? 'VOCALES EN CURSO'
+                      : 'TU PRÓXIMO PASO'}
                 </ThemedText>
                 <ThemedText style={styles.nextStepTitle}>
-                  {hasCompletedE
-                    ? '4 de 5 · あ、い、う、え completadas'
-                    : hasCompletedU
-                      ? '3 de 5 · あ、い、う completadas'
-                      : hasCompletedI
-                        ? '2 de 5 · あ、い completadas'
-                        : hasCompletedA
-                          ? '1 de 5 · あ completada'
-                          : 'Vocales · あいうえお'}
+                  {hasCompletedO
+                    ? '5 de 5 · あ、い、う、え、お completadas'
+                    : hasCompletedE
+                      ? '4 de 5 · あ、い、う、え completadas'
+                      : hasCompletedU
+                        ? '3 de 5 · あ、い、う completadas'
+                        : hasCompletedI
+                          ? '2 de 5 · あ、い completadas'
+                          : hasCompletedA
+                            ? '1 de 5 · あ completada'
+                            : 'Vocales · あいうえお'}
                 </ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.nextStepDescription}>
-                  {hasCompletedE
-                    ? 'Ya reconoces cuatro vocales. Tu próximo carácter será お.'
-                    : hasCompletedU
-                      ? 'Ya reconoces tres vocales. Tu próximo carácter será え.'
-                      : hasCompletedI
-                        ? 'Ya reconoces dos vocales. Tu próximo carácter será う.'
-                        : hasCompletedA
-                          ? 'Has dado el primer paso. Tu próximo carácter será い.'
-                          : 'Empezarás por あ y avanzarás un carácter cada vez.'}
+                  {hasCompletedO
+                    ? 'Ya reconoces y escribes las cinco vocales. El próximo grupo será la Fila K.'
+                    : hasCompletedE
+                      ? 'Ya reconoces cuatro vocales. Tu próximo carácter será お.'
+                      : hasCompletedU
+                        ? 'Ya reconoces tres vocales. Tu próximo carácter será え.'
+                        : hasCompletedI
+                          ? 'Ya reconoces dos vocales. Tu próximo carácter será う.'
+                          : hasCompletedA
+                            ? 'Has dado el primer paso. Tu próximo carácter será い.'
+                            : 'Empezarás por あ y avanzarás un carácter cada vez.'}
                 </ThemedText>
               </ThemedView>
             </View>
@@ -188,7 +205,7 @@ function PathItem({
             ]}>
             {item.symbol}
           </ThemedText>
-          {progress && (
+          {progress === 5 && (
             <View style={[styles.completedBadge, { backgroundColor: theme.accent }]}>
               <ThemedText style={[styles.completedCheckmark, { color: theme.accentText }]}>✓</ThemedText>
             </View>
