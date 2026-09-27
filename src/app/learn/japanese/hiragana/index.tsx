@@ -1,5 +1,7 @@
 import { Image } from 'expo-image';
-import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
@@ -14,6 +16,7 @@ type PathState = 'introduction' | 'current' | 'locked';
 export default function HiraganaPathScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 960;
+  const router = useRouter();
 
   return (
     <ThemedView style={styles.container}>
@@ -68,6 +71,7 @@ export default function HiraganaPathScreen() {
                     isLast={index === hiraganaPath.length - 1}
                     item={item}
                     key={item.id}
+                    onPress={item.id === 'vowels' ? () => router.push('/learn/japanese/hiragana/a') : undefined}
                     state={state}
                   />
                 );
@@ -83,21 +87,22 @@ export default function HiraganaPathScreen() {
 function PathItem({
   isLast,
   item,
+  onPress,
   state,
 }: {
   isLast: boolean;
   item: HiraganaPathItem;
+  onPress?: () => void;
   state: PathState;
 }) {
   const theme = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
   const isCurrent = state === 'current';
   const isLocked = state === 'locked';
   const status = state === 'introduction' ? 'Orientación' : isCurrent ? 'Empieza aquí' : 'Bloqueado';
 
-  return (
-    <View
-      accessibilityLabel={`${item.title}. ${item.description}. ${status}`}
-      style={styles.pathRow}>
+  const content = (
+    <>
       <View style={styles.markerColumn}>
         <View
           style={[
@@ -141,6 +146,39 @@ function PathItem({
           {item.description}
         </ThemedText>
       </View>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityHint="Abre la primera lección de Vocales"
+        accessibilityLabel={`${item.title}. ${item.description}. ${status}`}
+        accessibilityRole="button"
+        onBlur={() => setIsFocused(false)}
+        onFocus={() => setIsFocused(true)}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.pathRow,
+          styles.interactivePathRow,
+          pressed && { backgroundColor: theme.backgroundSelected },
+          Platform.OS === 'web' && isFocused && {
+            outlineColor: theme.focusRing,
+            outlineStyle: 'solid',
+            outlineWidth: 3,
+            outlineOffset: 3,
+          },
+        ]}>
+        {content}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View
+      accessibilityLabel={`${item.title}. ${item.description}. ${status}`}
+      style={styles.pathRow}>
+      {content}
     </View>
   );
 }
@@ -164,6 +202,10 @@ const styles = StyleSheet.create({
   nextStepDescription: { fontSize: 14, lineHeight: 20 },
   path: { width: '100%', maxWidth: 620 },
   pathRow: { minHeight: 112, flexDirection: 'row', gap: Spacing.three },
+  interactivePathRow: {
+    borderRadius: 24,
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
+  },
   markerColumn: { width: 76, alignItems: 'center' },
   marker: {
     width: 72,

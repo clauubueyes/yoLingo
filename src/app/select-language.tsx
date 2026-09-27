@@ -153,7 +153,7 @@ export default function SelectLanguageScreen() {
                   onFocus={() => setIsContinueFocused(true)}
                   onHoverIn={() => setIsContinueHovered(true)}
                   onHoverOut={() => setIsContinueHovered(false)}
-                  onPress={() => router.push('/learn/japanese/hiragana/a')}
+                  onPress={() => router.push('/learn/japanese/hiragana')}
                   style={({ pressed }) => [
                     styles.continueButton,
                     isNarrow && styles.narrowContinueButton,
