@@ -8,6 +8,7 @@ export default function HiraganaULessonScreen() {
 
   return (
     <KanaCharacterLesson
+      nextCharacter={{ symbol: 'え', onContinue: () => router.replace('/learn/japanese/hiragana/e') }}
       character={hiraganaU}
       onReturnToPath={() =>
         router.replace({

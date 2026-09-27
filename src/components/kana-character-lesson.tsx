@@ -19,9 +19,11 @@ type LessonPhase = 'demonstration' | 'writing' | 'recognition' | 'result';
 type KanaCharacterLessonProps = {
   character: KanaCharacter;
   onReturnToPath: () => void;
+  nextCharacter?: { symbol: string; onContinue: () => void };
+  onReviewVowels?: () => void;
 };
 
-export function KanaCharacterLesson({ character, onReturnToPath }: KanaCharacterLessonProps) {
+export function KanaCharacterLesson({ character, onReturnToPath, nextCharacter, onReviewVowels }: KanaCharacterLessonProps) {
   const { height, width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 960;
   const isNarrow = width < 480;
@@ -186,13 +188,15 @@ export function KanaCharacterLesson({ character, onReturnToPath }: KanaCharacter
               {phase === 'recognition' && (
                 <KanaRecognitionQuiz
                   character={character}
-                  onComplete={() => setPhase('result')}
+                  continueLabel={nextCharacter ? `SIGUIENTE: ${nextCharacter.symbol}` : 'VER RESULTADO'}
+                  onComplete={nextCharacter ? nextCharacter.onContinue : () => setPhase('result')}
                 />
               )}
               {phase === 'result' && (
                 <KanaLessonResult
                   character={character}
-                  onRepeat={repeatLesson}
+                  isVowelResult={Boolean(onReviewVowels)}
+                  onRepeat={onReviewVowels ?? repeatLesson}
                   onReturnToPath={onReturnToPath}
                 />
               )}

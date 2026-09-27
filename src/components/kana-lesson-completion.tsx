@@ -11,10 +11,11 @@ const READING_OPTIONS = ['a', 'i', 'u', 'e', 'o'] as const;
 
 type KanaRecognitionQuizProps = {
   character: KanaCharacter;
+  continueLabel: string;
   onComplete: () => void;
 };
 
-export function KanaRecognitionQuiz({ character, onComplete }: KanaRecognitionQuizProps) {
+export function KanaRecognitionQuiz({ character, onComplete, continueLabel }: KanaRecognitionQuizProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const isNarrow = width < 480;
@@ -109,7 +110,7 @@ export function KanaRecognitionQuiz({ character, onComplete }: KanaRecognitionQu
               },
             ]}>
             <ThemedText style={[styles.primaryLabel, { color: theme.accentText }]}>
-              VER RESULTADO
+              {continueLabel}
             </ThemedText>
           </Pressable>
         </View>
@@ -120,12 +121,14 @@ export function KanaRecognitionQuiz({ character, onComplete }: KanaRecognitionQu
 
 type KanaLessonResultProps = {
   character: KanaCharacter;
+  isVowelResult?: boolean;
   onRepeat: () => void;
   onReturnToPath: () => void;
 };
 
 export function KanaLessonResult({
   character,
+  isVowelResult = false,
   onRepeat,
   onReturnToPath,
 }: KanaLessonResultProps) {
@@ -148,17 +151,17 @@ export function KanaLessonResult({
       <ThemedText
         accessibilityRole="header"
         style={[styles.resultTitle, isNarrow && styles.narrowResultTitle]}>
-        Lección completada
+        {isVowelResult ? 'Vocales completadas' : 'Lección completada'}
       </ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.resultDescription}>
-        Ya has dado tus primeros pasos con Hiragana.
+        {isVowelResult ? 'あ · い · う · え · お' : 'Ya has dado tus primeros pasos con Hiragana.'}
       </ThemedText>
 
       <View style={styles.resultList}>
         <ResultRow
-          label={`Has escrito ${character.symbol} siguiendo sus ${character.strokes.length} trazos`}
+          label={isVowelResult ? 'Has practicado la escritura de las cinco vocales' : `Has escrito ${character.symbol} siguiendo sus ${character.strokes.length} trazos`}
         />
-        <ResultRow label={`Has reconocido que ${character.symbol} se lee «${character.reading}»`} />
+        <ResultRow label={isVowelResult ? 'Has reconocido sus lecturas: a, i, u, e, o' : `Has reconocido que ${character.symbol} se lee «${character.reading}»`} />
       </View>
 
       <View style={styles.resultActions}>
@@ -180,7 +183,7 @@ export function KanaLessonResult({
               },
             ]}>
             <ThemedText style={[styles.primaryLabel, { color: theme.accentText }]}>
-              REPETIR LECCIÓN
+              {isVowelResult ? 'REPASAR VOCALES' : 'REPETIR LECCIÓN'}
             </ThemedText>
           </Pressable>
         </View>

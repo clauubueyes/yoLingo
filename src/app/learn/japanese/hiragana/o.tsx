@@ -8,6 +8,7 @@ export default function HiraganaOLessonScreen() {
 
   return (
     <KanaCharacterLesson
+      onReviewVowels={() => router.replace('/learn/japanese/hiragana/a')}
       character={hiraganaO}
       onReturnToPath={() =>
         router.replace({
