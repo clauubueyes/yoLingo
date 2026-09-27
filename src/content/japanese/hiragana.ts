@@ -113,3 +113,61 @@ export const hiraganaA: KanaCharacter = {
     licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
   },
 };
+
+export const hiraganaI: KanaCharacter = {
+  id: 'hiragana-i',
+  symbol: 'い',
+  reading: 'i',
+  system: 'hiragana',
+  viewBox: [0, 0, 109, 109],
+  strokes: [
+    {
+      number: 1,
+      path: 'M21.5,29.66c2.01,2.17,2.61,4.68,2.17,7.43c-3.09,19.16-1.03,32.01,7.93,41.45c6.12,6.45,6.26,3.14,7.04-5.21',
+      labelPosition: { x: 10, y: 18 },
+      directionGuides: [
+        { path: 'M14,19 L20,29', previous: { x: 14, y: 19 }, end: { x: 20, y: 29 } },
+      ],
+      referencePoints: [
+        { x: 21.5, y: 29.66 },
+        { x: 22.54, y: 31 },
+        { x: 23.26, y: 32.42 },
+        { x: 23.68, y: 33.91 },
+        { x: 23.81, y: 35.47 },
+        { x: 23.67, y: 37.09 },
+        { x: 22.45, y: 47.85 },
+        { x: 22.55, y: 57.24 },
+        { x: 24.05, y: 65.39 },
+        { x: 27.04, y: 72.44 },
+        { x: 31.6, y: 78.54 },
+        { x: 34.61, y: 81.28 },
+        { x: 36.5, y: 81.9 },
+        { x: 37.59, y: 80.63 },
+        { x: 38.2, y: 77.7 },
+        { x: 38.64, y: 73.33 },
+      ],
+    },
+    {
+      number: 2,
+      path: 'M72.96,36.51c9.44,8.05,17.79,18.82,18.41,33.83',
+      labelPosition: { x: 60, y: 25 },
+      directionGuides: [
+        { path: 'M65,27 L72,35', previous: { x: 65, y: 27 }, end: { x: 72, y: 35 } },
+      ],
+      referencePoints: [
+        { x: 72.96, y: 36.51 },
+        { x: 78.44, y: 41.68 },
+        { x: 83.34, y: 47.57 },
+        { x: 87.34, y: 54.27 },
+        { x: 90.12, y: 61.83 },
+        { x: 91.37, y: 70.34 },
+      ],
+    },
+  ],
+  source: {
+    name: 'KanjiVG',
+    url: 'https://kanjivg.tagaini.net/',
+    license: 'CC BY-SA 3.0',
+    licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
+  },
+};
