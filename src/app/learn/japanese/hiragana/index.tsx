@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +17,8 @@ export default function HiraganaPathScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 960;
   const router = useRouter();
+  const { completed } = useLocalSearchParams<{ completed?: string | string[] }>();
+  const hasCompletedA = Array.isArray(completed) ? completed.includes('a') : completed === 'a';
 
   return (
     <ThemedView style={styles.container}>
@@ -53,10 +55,16 @@ export default function HiraganaPathScreen() {
               </ThemedText>
 
               <ThemedView type="backgroundSelected" style={styles.nextStep}>
-                <ThemedText style={styles.nextStepLabel}>TU PRÓXIMO PASO</ThemedText>
-                <ThemedText style={styles.nextStepTitle}>Vocales · あいうえお</ThemedText>
+                <ThemedText style={styles.nextStepLabel}>
+                  {hasCompletedA ? 'VOCALES EN CURSO' : 'TU PRÓXIMO PASO'}
+                </ThemedText>
+                <ThemedText style={styles.nextStepTitle}>
+                  {hasCompletedA ? '1 de 5 · あ completada' : 'Vocales · あいうえお'}
+                </ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.nextStepDescription}>
-                  Empezarás por あ y avanzarás un carácter cada vez.
+                  {hasCompletedA
+                    ? 'Has dado el primer paso. Tu próximo carácter será い.'
+                    : 'Empezarás por あ y avanzarás un carácter cada vez.'}
                 </ThemedText>
               </ThemedView>
             </View>
@@ -72,6 +80,7 @@ export default function HiraganaPathScreen() {
                     item={item}
                     key={item.id}
                     onPress={item.id === 'vowels' ? () => router.push('/learn/japanese/hiragana/a') : undefined}
+                    progress={item.id === 'vowels' && hasCompletedA ? 1 : undefined}
                     state={state}
                   />
                 );
@@ -88,18 +97,27 @@ function PathItem({
   isLast,
   item,
   onPress,
+  progress,
   state,
 }: {
   isLast: boolean;
   item: HiraganaPathItem;
   onPress?: () => void;
+  progress?: number;
   state: PathState;
 }) {
   const theme = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const isCurrent = state === 'current';
   const isLocked = state === 'locked';
-  const status = state === 'introduction' ? 'Orientación' : isCurrent ? 'Empieza aquí' : 'Bloqueado';
+  const status =
+    state === 'introduction'
+      ? 'Orientación'
+      : progress
+        ? `${progress} de 5`
+        : isCurrent
+          ? 'Empieza aquí'
+          : 'Bloqueado';
 
   const content = (
     <>
@@ -120,6 +138,11 @@ function PathItem({
             ]}>
             {item.symbol}
           </ThemedText>
+          {progress && (
+            <View style={[styles.completedBadge, { backgroundColor: theme.accent }]}>
+              <ThemedText style={[styles.completedCheckmark, { color: theme.accentText }]}>✓</ThemedText>
+            </View>
+          )}
         </View>
         {!isLast && (
           <View
@@ -145,6 +168,18 @@ function PathItem({
         <ThemedText themeColor="textSecondary" style={styles.pathDescription}>
           {item.description}
         </ThemedText>
+        {progress && (
+          <View
+            accessibilityLabel={`${progress} de 5 caracteres completados`}
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: 5, now: progress }}
+            aria-valuemax={5}
+            aria-valuemin={0}
+            aria-valuenow={progress}
+            style={[styles.progressTrack, { backgroundColor: theme.backgroundSelected }]}>
+            <View style={[styles.progressValue, { backgroundColor: theme.accent }]} />
+          </View>
+        )}
       </View>
     </>
   );
@@ -152,7 +187,7 @@ function PathItem({
   if (onPress) {
     return (
       <Pressable
-        accessibilityHint="Abre la primera lección de Vocales"
+        accessibilityHint={progress ? 'Repite la lección de あ' : 'Abre la primera lección de Vocales'}
         accessibilityLabel={`${item.title}. ${item.description}. ${status}`}
         accessibilityRole="button"
         onBlur={() => setIsFocused(false)}
@@ -216,12 +251,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   markerSymbol: { fontSize: 34, lineHeight: 44, fontWeight: 700 },
+  completedBadge: {
+    position: 'absolute',
+    right: -3,
+    bottom: -3,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completedCheckmark: { fontSize: 15, lineHeight: 19, fontWeight: 800 },
   connector: { width: 6, flex: 1, minHeight: 28, marginVertical: 5, borderRadius: 3 },
   pathDetails: { flex: 1, paddingTop: 9, gap: 4 },
   pathHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 6 },
   pathTitle: { fontSize: 21, lineHeight: 28, fontWeight: 800 },
   status: { fontSize: 12, lineHeight: 17, fontWeight: 700 },
   pathDescription: { fontSize: 16, lineHeight: 23 },
+  progressTrack: { width: '100%', height: 7, marginTop: 5, borderRadius: 4, overflow: 'hidden' },
+  progressValue: { width: '20%', height: '100%', borderRadius: 4 },
   desktopContent: { paddingHorizontal: 48, paddingTop: Spacing.four, paddingBottom: 64 },
   desktopTopBar: { justifyContent: 'flex-start', gap: Spacing.three },
   desktopMain: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 72, paddingTop: 64 },

@@ -121,18 +121,18 @@ export function KanaRecognitionQuiz({ character, onComplete }: KanaRecognitionQu
 type KanaLessonResultProps = {
   character: KanaCharacter;
   onRepeat: () => void;
-  onReturnToLanguages: () => void;
+  onReturnToPath: () => void;
 };
 
 export function KanaLessonResult({
   character,
   onRepeat,
-  onReturnToLanguages,
+  onReturnToPath,
 }: KanaLessonResultProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const isNarrow = width < 480;
-  const [focusedButton, setFocusedButton] = useState<'languages' | 'repeat' | null>(null);
+  const [focusedButton, setFocusedButton] = useState<'path' | 'repeat' | null>(null);
 
   return (
     <View style={[styles.step, isNarrow && styles.narrowStep]}>
@@ -185,22 +185,22 @@ export function KanaLessonResult({
         <Pressable
           accessibilityRole="button"
           onBlur={() => setFocusedButton(null)}
-          onFocus={() => setFocusedButton('languages')}
-          onPress={onReturnToLanguages}
+          onFocus={() => setFocusedButton('path')}
+          onPress={onReturnToPath}
           style={({ pressed }) => [
             styles.secondaryButton,
             {
               backgroundColor: pressed ? theme.backgroundSelected : 'transparent',
               borderColor: theme.accent,
             },
-            Platform.OS === 'web' && focusedButton === 'languages' && {
+            Platform.OS === 'web' && focusedButton === 'path' && {
               outlineColor: theme.focusRing,
               outlineStyle: 'solid',
               outlineWidth: 3,
               outlineOffset: 2,
             },
           ]}>
-          <ThemedText style={styles.secondaryLabel}>VOLVER A IDIOMAS</ThemedText>
+          <ThemedText style={styles.secondaryLabel}>VOLVER A LA RUTA</ThemedText>
         </Pressable>
       </View>
     </View>

@@ -191,7 +191,12 @@ export default function HiraganaALessonScreen() {
                 <KanaLessonResult
                   character={hiraganaA}
                   onRepeat={repeatLesson}
-                  onReturnToLanguages={() => router.replace('/select-language')}
+                  onReturnToPath={() =>
+                    router.replace({
+                      pathname: '/learn/japanese/hiragana',
+                      params: { completed: 'a' },
+                    })
+                  }
                 />
               )}
 
