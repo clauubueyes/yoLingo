@@ -7,7 +7,7 @@ import { Spacing } from '@/constants/theme';
 import type { KanaCharacter } from '@/domain/kana';
 import { useTheme } from '@/hooks/use-theme';
 
-const READING_OPTIONS = ['a', 'i', 'u', 'e'] as const;
+const READING_OPTIONS = ['a', 'i', 'u', 'e', 'o'] as const;
 
 type KanaRecognitionQuizProps = {
   character: KanaCharacter;
