@@ -22,15 +22,20 @@ export default function HiraganaPathScreen() {
     .flatMap((value) => value.split(','));
   const hasCompletedA = completedCharacters.includes('a');
   const hasCompletedI = completedCharacters.includes('i');
-  const vowelProgress = Number(hasCompletedA) + Number(hasCompletedI);
-  const nextLessonHref = hasCompletedA
-    ? '/learn/japanese/hiragana/i'
-    : '/learn/japanese/hiragana/a';
-  const vowelActionHint = hasCompletedI
-    ? 'Repite la lección de い'
+  const hasCompletedU = completedCharacters.includes('u');
+  const vowelProgress = Number(hasCompletedA) + Number(hasCompletedI) + Number(hasCompletedU);
+  const nextLessonHref = hasCompletedI
+    ? '/learn/japanese/hiragana/u'
     : hasCompletedA
-      ? 'Abre la lección de い'
-      : 'Abre la primera lección de Vocales';
+      ? '/learn/japanese/hiragana/i'
+      : '/learn/japanese/hiragana/a';
+  const vowelActionHint = hasCompletedU
+    ? 'Repite la lección de う'
+    : hasCompletedI
+      ? 'Abre la lección de う'
+      : hasCompletedA
+        ? 'Abre la lección de い'
+        : 'Abre la primera lección de Vocales';
 
   return (
     <ThemedView style={styles.container}>
@@ -71,18 +76,22 @@ export default function HiraganaPathScreen() {
                   {vowelProgress ? 'VOCALES EN CURSO' : 'TU PRÓXIMO PASO'}
                 </ThemedText>
                 <ThemedText style={styles.nextStepTitle}>
-                  {hasCompletedI
-                    ? '2 de 5 · あ、い completadas'
-                    : hasCompletedA
-                      ? '1 de 5 · あ completada'
-                      : 'Vocales · あいうえお'}
+                  {hasCompletedU
+                    ? '3 de 5 · あ、い、う completadas'
+                    : hasCompletedI
+                      ? '2 de 5 · あ、い completadas'
+                      : hasCompletedA
+                        ? '1 de 5 · あ completada'
+                        : 'Vocales · あいうえお'}
                 </ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.nextStepDescription}>
-                  {hasCompletedI
-                    ? 'Ya reconoces dos vocales. Tu próximo carácter será う.'
-                    : hasCompletedA
-                      ? 'Has dado el primer paso. Tu próximo carácter será い.'
-                      : 'Empezarás por あ y avanzarás un carácter cada vez.'}
+                  {hasCompletedU
+                    ? 'Ya reconoces tres vocales. Tu próximo carácter será え.'
+                    : hasCompletedI
+                      ? 'Ya reconoces dos vocales. Tu próximo carácter será う.'
+                      : hasCompletedA
+                        ? 'Has dado el primer paso. Tu próximo carácter será い.'
+                        : 'Empezarás por あ y avanzarás un carácter cada vez.'}
                 </ThemedText>
               </ThemedView>
             </View>
