@@ -18,7 +18,19 @@ export default function HiraganaPathScreen() {
   const isDesktop = Platform.OS === 'web' && width >= 960;
   const router = useRouter();
   const { completed } = useLocalSearchParams<{ completed?: string | string[] }>();
-  const hasCompletedA = Array.isArray(completed) ? completed.includes('a') : completed === 'a';
+  const completedCharacters = (Array.isArray(completed) ? completed : completed ? [completed] : [])
+    .flatMap((value) => value.split(','));
+  const hasCompletedA = completedCharacters.includes('a');
+  const hasCompletedI = completedCharacters.includes('i');
+  const vowelProgress = Number(hasCompletedA) + Number(hasCompletedI);
+  const nextLessonHref = hasCompletedA
+    ? '/learn/japanese/hiragana/i'
+    : '/learn/japanese/hiragana/a';
+  const vowelActionHint = hasCompletedI
+    ? 'Repite la lección de い'
+    : hasCompletedA
+      ? 'Abre la lección de い'
+      : 'Abre la primera lección de Vocales';
 
   return (
     <ThemedView style={styles.container}>
@@ -56,15 +68,21 @@ export default function HiraganaPathScreen() {
 
               <ThemedView type="backgroundSelected" style={styles.nextStep}>
                 <ThemedText style={styles.nextStepLabel}>
-                  {hasCompletedA ? 'VOCALES EN CURSO' : 'TU PRÓXIMO PASO'}
+                  {vowelProgress ? 'VOCALES EN CURSO' : 'TU PRÓXIMO PASO'}
                 </ThemedText>
                 <ThemedText style={styles.nextStepTitle}>
-                  {hasCompletedA ? '1 de 5 · あ completada' : 'Vocales · あいうえお'}
+                  {hasCompletedI
+                    ? '2 de 5 · あ、い completadas'
+                    : hasCompletedA
+                      ? '1 de 5 · あ completada'
+                      : 'Vocales · あいうえお'}
                 </ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.nextStepDescription}>
-                  {hasCompletedA
-                    ? 'Has dado el primer paso. Tu próximo carácter será い.'
-                    : 'Empezarás por あ y avanzarás un carácter cada vez.'}
+                  {hasCompletedI
+                    ? 'Ya reconoces dos vocales. Tu próximo carácter será う.'
+                    : hasCompletedA
+                      ? 'Has dado el primer paso. Tu próximo carácter será い.'
+                      : 'Empezarás por あ y avanzarás un carácter cada vez.'}
                 </ThemedText>
               </ThemedView>
             </View>
@@ -76,11 +94,12 @@ export default function HiraganaPathScreen() {
 
                 return (
                   <PathItem
+                    actionHint={item.id === 'vowels' ? vowelActionHint : undefined}
                     isLast={index === hiraganaPath.length - 1}
                     item={item}
                     key={item.id}
-                    onPress={item.id === 'vowels' ? () => router.push('/learn/japanese/hiragana/a') : undefined}
-                    progress={item.id === 'vowels' && hasCompletedA ? 1 : undefined}
+                    onPress={item.id === 'vowels' ? () => router.push(nextLessonHref) : undefined}
+                    progress={item.id === 'vowels' && vowelProgress ? vowelProgress : undefined}
                     state={state}
                   />
                 );
@@ -94,12 +113,14 @@ export default function HiraganaPathScreen() {
 }
 
 function PathItem({
+  actionHint,
   isLast,
   item,
   onPress,
   progress,
   state,
 }: {
+  actionHint?: string;
   isLast: boolean;
   item: HiraganaPathItem;
   onPress?: () => void;
@@ -110,6 +131,16 @@ function PathItem({
   const [isFocused, setIsFocused] = useState(false);
   const isCurrent = state === 'current';
   const isLocked = state === 'locked';
+  const progressWidth =
+    progress === 1
+      ? '20%'
+      : progress === 2
+        ? '40%'
+        : progress === 3
+          ? '60%'
+          : progress === 4
+            ? '80%'
+            : '100%';
   const status =
     state === 'introduction'
       ? 'Orientación'
@@ -177,7 +208,12 @@ function PathItem({
             aria-valuemin={0}
             aria-valuenow={progress}
             style={[styles.progressTrack, { backgroundColor: theme.backgroundSelected }]}>
-            <View style={[styles.progressValue, { backgroundColor: theme.accent }]} />
+            <View
+              style={[
+                styles.progressValue,
+                { width: progressWidth, backgroundColor: theme.accent },
+              ]}
+            />
           </View>
         )}
       </View>
@@ -187,7 +223,7 @@ function PathItem({
   if (onPress) {
     return (
       <Pressable
-        accessibilityHint={progress ? 'Repite la lección de あ' : 'Abre la primera lección de Vocales'}
+        accessibilityHint={actionHint}
         accessibilityLabel={`${item.title}. ${item.description}. ${status}`}
         accessibilityRole="button"
         onBlur={() => setIsFocused(false)}
@@ -269,7 +305,7 @@ const styles = StyleSheet.create({
   status: { fontSize: 12, lineHeight: 17, fontWeight: 700 },
   pathDescription: { fontSize: 16, lineHeight: 23 },
   progressTrack: { width: '100%', height: 7, marginTop: 5, borderRadius: 4, overflow: 'hidden' },
-  progressValue: { width: '20%', height: '100%', borderRadius: 4 },
+  progressValue: { height: '100%', borderRadius: 4 },
   desktopContent: { paddingHorizontal: 48, paddingTop: Spacing.four, paddingBottom: 64 },
   desktopTopBar: { justifyContent: 'flex-start', gap: Spacing.three },
   desktopMain: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 72, paddingTop: 64 },
