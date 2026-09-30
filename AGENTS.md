@@ -4,7 +4,7 @@ Project
 
 yoLingo is a language-learning application built with Expo, React Native, TypeScript, and Expo Router. It targets Android and iOS first and also has a responsive web experience.
 
-The product combines language-specific learning paths with a personal dictionary, saved vocabulary, lists, and review. It should help people understand and retain a language, not merely complete exercises. Read VISION.md, ROADMAP.md, and ARCHITECTURE.md when a task concerns product scope or architecture.
+The product combines language-specific learning paths with a personal dictionary, saved vocabulary, lists, and review. It should help people understand and retain a language, not merely complete exercises. Read `docs/vision.md`, `docs/roadmap.md`, and `docs/architecture.md` when a task concerns product scope or architecture. Read `docs/auditoria.md` before changing any screen or navigation: it records the known UX defects of the current journey by ID (`A-01` … `A-25`), and the roadmap orders the fixes around them.
 
 How to work with the developer
 
