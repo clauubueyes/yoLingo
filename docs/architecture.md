@@ -18,5 +18,25 @@ calcula sobre todas sus lecciones, no como promedio de los grupos. Sin contenido
 el porcentaje es cero, la ruta no está completada y no hay siguiente lección.
 Añadir contenido puede reducir el porcentaje; repetir una lección no lo reduce.
 
-Estas reglas todavía no están conectadas a las pantallas. La persistencia y su
-integración corresponden a los siguientes incrementos de UX-0.
+## Persistencia local
+
+`src/stores/progress.ts` expone una única instancia sobre AsyncStorage. La lógica
+de lectura y completado está en `src/domain/progress-store.ts`, con almacenamiento
+inyectable para probarla sin React Native. No mantiene una copia en memoria:
+cada operación lee el estado guardado, y completar escribe el conjunto acumulado.
+
+Cada ruta usa una clave `yolingo:progress:v1:<ID de ruta codificado>` que contiene
+un array JSON de IDs completados. Los datos ausentes, el JSON inválido o un valor
+que no sea un array se leen como vacíos. En arrays parcialmente corruptos se
+conservan los strings no vacíos y se eliminan duplicados. Leer no reescribe datos;
+el siguiente completado guarda el conjunto recuperado. Los IDs desconocidos se
+conservan: las reglas de progreso deciden si pertenecen al contenido disponible.
+
+Las operaciones de la instancia se serializan para evitar pérdidas entre
+completados concurrentes. Esto no sincroniza pestañas del navegador ni otras
+instancias. Los errores de acceso a AsyncStorage se propagan al llamador; no se
+tratan como datos vacíos ni se confirma un completado cuyo guardado haya fallado.
+Una operación fallida permite reintentos posteriores.
+
+El store y las reglas todavía no están conectados a las pantallas. Esa integración
+corresponde al siguiente incremento de UX-0; aún no cambia el recorrido visible.
