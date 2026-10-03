@@ -13,12 +13,7 @@ export default function HiraganaALessonScreen() {
       nextCharacter={{ symbol: 'い', onContinue: () => router.replace('/learn/japanese/hiragana/i') }}
       character={hiraganaA}
       onComplete={() => progressStore.completeLesson(hiraganaPathId, hiraganaA.id)}
-      onReturnToPath={() =>
-        router.replace({
-          pathname: '/learn/japanese/hiragana',
-          params: { completed: 'a' },
-        })
-      }
+      onReturnToPath={() => router.replace('/learn/japanese/hiragana')}
     />
   );
 }

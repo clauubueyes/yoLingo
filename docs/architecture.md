@@ -50,5 +50,5 @@ Al confirmar el reconocimiento, la lección espera el guardado antes de avanzar
 o mostrar el resultado. Un fallo conserva el quiz y permite reintentar. Volver
 atrás antes de confirmar no completa la lección; hacerlo después conserva lo
 guardado. Los enlaces profundos abren contenido, no otorgan progreso: el parámetro
-antiguo `completed` ya no se lee. Su eliminación de los callbacks de retorno
-queda para el paso 7 de UX-0.
+antiguo `completed` no se lee ni se envía. Los callbacks de retorno enlazan a
+`/learn/japanese/hiragana` sin listas de completados en la URL.

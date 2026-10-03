@@ -13,12 +13,7 @@ export default function HiraganaOLessonScreen() {
       onReviewVowels={() => router.replace('/learn/japanese/hiragana/a')}
       character={hiraganaO}
       onComplete={() => progressStore.completeLesson(hiraganaPathId, hiraganaO.id)}
-      onReturnToPath={() =>
-        router.replace({
-          pathname: '/learn/japanese/hiragana',
-          params: { completed: ['a', 'i', 'u', 'e', 'o'] },
-        })
-      }
+      onReturnToPath={() => router.replace('/learn/japanese/hiragana')}
     />
   );
 }
