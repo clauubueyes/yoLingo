@@ -18,12 +18,13 @@ type LessonPhase = 'demonstration' | 'writing' | 'recognition' | 'result';
 
 type KanaCharacterLessonProps = {
   character: KanaCharacter;
+  onComplete: () => Promise<unknown>;
   onReturnToPath: () => void;
   nextCharacter?: { symbol: string; onContinue: () => void };
   onReviewVowels?: () => void;
 };
 
-export function KanaCharacterLesson({ character, onReturnToPath, nextCharacter, onReviewVowels }: KanaCharacterLessonProps) {
+export function KanaCharacterLesson({ character, onComplete, onReturnToPath, nextCharacter, onReviewVowels }: KanaCharacterLessonProps) {
   const { height, width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 960;
   const isNarrow = width < 480;
@@ -35,6 +36,9 @@ export function KanaCharacterLesson({ character, onReturnToPath, nextCharacter, 
   const [replayKey, setReplayKey] = useState(0);
   const [phase, setPhase] = useState<LessonPhase>('demonstration');
   const [isDrawing, setIsDrawing] = useState(false);
+  const savingRef = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [focusedButton, setFocusedButton] = useState<'replay' | 'practice' | null>(null);
   const phaseStep = phase === 'demonstration' ? 1 : phase === 'writing' ? 2 : 3;
 
@@ -45,6 +49,23 @@ export function KanaCharacterLesson({ character, onReturnToPath, nextCharacter, 
   const repeatLesson = () => {
     setReplayKey((current) => current + 1);
     setPhase('demonstration');
+  };
+
+  const finishLesson = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await onComplete();
+      if (nextCharacter) nextCharacter.onContinue();
+      else setPhase('result');
+    } catch {
+      setSaveError('No se pudo guardar tu progreso. Pulsa de nuevo para reintentar.');
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -189,7 +210,9 @@ export function KanaCharacterLesson({ character, onReturnToPath, nextCharacter, 
                 <KanaRecognitionQuiz
                   character={character}
                   continueLabel={nextCharacter ? `SIGUIENTE: ${nextCharacter.symbol}` : 'VER RESULTADO'}
-                  onComplete={nextCharacter ? nextCharacter.onContinue : () => setPhase('result')}
+                  isSaving={isSaving}
+                  saveError={saveError}
+                  onComplete={finishLesson}
                 />
               )}
               {phase === 'result' && (

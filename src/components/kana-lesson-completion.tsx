@@ -13,9 +13,11 @@ type KanaRecognitionQuizProps = {
   character: KanaCharacter;
   continueLabel: string;
   onComplete: () => void;
+  isSaving: boolean;
+  saveError: string | null;
 };
 
-export function KanaRecognitionQuiz({ character, onComplete, continueLabel }: KanaRecognitionQuizProps) {
+export function KanaRecognitionQuiz({ character, onComplete, continueLabel, isSaving, saveError }: KanaRecognitionQuizProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const isNarrow = width < 480;
@@ -81,20 +83,22 @@ export function KanaRecognitionQuiz({ character, onComplete, continueLabel }: Ka
         style={[
           styles.feedback,
           selectedReading && {
-            color: isCorrect ? theme.decorationMint : theme.decorationOrange,
+            color: isCorrect && !saveError ? theme.decorationMint : theme.decorationOrange,
           },
         ]}>
-        {selectedReading
+        {saveError ?? (selectedReading
           ? isCorrect
             ? `¡Correcto! ${character.symbol} se lee «${character.reading}».`
             : 'Todavía no. Prueba otra respuesta.'
-          : ''}
+          : '')}
       </ThemedText>
 
       {isCorrect && (
         <View style={[styles.primaryShadow, { backgroundColor: theme.accentShadow }]}>
           <Pressable
             accessibilityRole="button"
+            accessibilityState={{ disabled: isSaving, busy: isSaving }}
+            disabled={isSaving}
             onBlur={() => setIsContinueFocused(false)}
             onFocus={() => setIsContinueFocused(true)}
             onPress={onComplete}
@@ -110,7 +114,7 @@ export function KanaRecognitionQuiz({ character, onComplete, continueLabel }: Ka
               },
             ]}>
             <ThemedText style={[styles.primaryLabel, { color: theme.accentText }]}>
-              {continueLabel}
+              {isSaving ? 'GUARDANDO…' : continueLabel}
             </ThemedText>
           </Pressable>
         </View>

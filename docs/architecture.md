@@ -38,5 +38,17 @@ instancias. Los errores de acceso a AsyncStorage se propagan al llamador; no se
 tratan como datos vacíos ni se confirma un completado cuyo guardado haya fallado.
 Una operación fallida permite reintentos posteriores.
 
-El store y las reglas todavía no están conectados a las pantallas. Esa integración
-corresponde al siguiente incremento de UX-0; aún no cambia el recorrido visible.
+## Integración con Hiragana
+
+`hiragana-lessons.ts` relaciona el contenido disponible con las pantallas de las
+cinco vocales. Sus IDs de carácter (`hiragana-a`, etc.) son los IDs persistidos.
+La ruta lee el store al recuperar el foco y calcula el siguiente pendiente y el
+progreso a partir de este contenido. Durante la carga o si falla la lectura, no
+permite abrir una lección desde la ruta; un fallo ofrece reintentar.
+
+Al confirmar el reconocimiento, la lección espera el guardado antes de avanzar
+o mostrar el resultado. Un fallo conserva el quiz y permite reintentar. Volver
+atrás antes de confirmar no completa la lección; hacerlo después conserva lo
+guardado. Los enlaces profundos abren contenido, no otorgan progreso: el parámetro
+antiguo `completed` ya no se lee. Su eliminación de los callbacks de retorno
+queda para el paso 7 de UX-0.

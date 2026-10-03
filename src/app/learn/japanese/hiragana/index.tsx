@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +8,10 @@ import { BackButton } from '@/components/back-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { hiraganaPath, type HiraganaPathItem } from '@/content/japanese/hiragana-path';
+import { hiraganaLearningGroups, hiraganaLessons, hiraganaPathId, hiraganaVowels } from '@/content/japanese/hiragana-lessons';
 import { Spacing } from '@/constants/theme';
+import { getGroupProgress, getNextLesson } from '@/domain/progress';
+import { useLearningProgress } from '@/hooks/use-learning-progress';
 import { useTheme } from '@/hooks/use-theme';
 
 type PathState = 'introduction' | 'current' | 'locked';
@@ -17,40 +20,21 @@ export default function HiraganaPathScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 960;
   const router = useRouter();
-  const { completed } = useLocalSearchParams<{ completed?: string | string[] }>();
-  const completedCharacters = (Array.isArray(completed) ? completed : completed ? [completed] : [])
-    .flatMap((value) => value.split(','));
-  const hasCompletedA = completedCharacters.includes('a');
-  const hasCompletedI = completedCharacters.includes('i');
-  const hasCompletedU = completedCharacters.includes('u');
-  const hasCompletedE = completedCharacters.includes('e');
-  const hasCompletedO = completedCharacters.includes('o');
-  const vowelProgress =
-    Number(hasCompletedA) +
-    Number(hasCompletedI) +
-    Number(hasCompletedU) +
-    Number(hasCompletedE) +
-    Number(hasCompletedO);
-  const nextLessonHref = hasCompletedE
-    ? '/learn/japanese/hiragana/o'
-    : hasCompletedU
-      ? '/learn/japanese/hiragana/e'
-      : hasCompletedI
-        ? '/learn/japanese/hiragana/u'
-        : hasCompletedA
-          ? '/learn/japanese/hiragana/i'
-          : '/learn/japanese/hiragana/a';
-  const vowelActionHint = hasCompletedO
-    ? 'Repite la lección de お'
-    : hasCompletedE
-      ? 'Abre la lección de お'
-      : hasCompletedU
-        ? 'Abre la lección de え'
-        : hasCompletedI
-          ? 'Abre la lección de う'
-          : hasCompletedA
-            ? 'Abre la lección de い'
-            : 'Abre la primera lección de Vocales';
+  const { completed, error, reload } = useLearningProgress(hiraganaPathId);
+  const completedCharacters = completed ?? [];
+  const progress = getGroupProgress(hiraganaVowels, completedCharacters);
+  const vowelProgress = progress.completed;
+  const nextLessonId = getNextLesson(hiraganaLearningGroups, completedCharacters);
+  const nextLesson = hiraganaLessons.find(({ character }) => character.id === nextLessonId);
+  // Preserve the existing review entry point once all available lessons are complete.
+  const targetLesson = nextLesson ?? hiraganaLessons[hiraganaLessons.length - 1];
+  const completedSymbols = hiraganaLessons
+    .filter(({ character }) => completedCharacters.includes(character.id))
+    .map(({ character }) => character.symbol)
+    .join('、');
+  const vowelActionHint = progress.isComplete
+    ? `Repite la lección de ${targetLesson.character.symbol}`
+    : `Abre la lección de ${targetLesson.character.symbol}`;
 
   return (
     <ThemedView style={styles.container}>
@@ -88,38 +72,34 @@ export default function HiraganaPathScreen() {
 
               <ThemedView type="backgroundSelected" style={styles.nextStep}>
                 <ThemedText style={styles.nextStepLabel}>
-                  {hasCompletedO
-                    ? 'VOCALES COMPLETADAS'
-                    : vowelProgress
-                      ? 'VOCALES EN CURSO'
-                      : 'TU PRÓXIMO PASO'}
+                  {completed === null
+                    ? error ? 'PROGRESO NO DISPONIBLE' : 'CARGANDO PROGRESO…'
+                    : progress.isComplete
+                      ? 'VOCALES COMPLETADAS'
+                      : vowelProgress ? 'VOCALES EN CURSO' : 'TU PRÓXIMO PASO'}
                 </ThemedText>
-                <ThemedText style={styles.nextStepTitle}>
-                  {hasCompletedO
-                    ? '5 de 5 · あ、い、う、え、お completadas'
-                    : hasCompletedE
-                      ? '4 de 5 · あ、い、う、え completadas'
-                      : hasCompletedU
-                        ? '3 de 5 · あ、い、う completadas'
-                        : hasCompletedI
-                          ? '2 de 5 · あ、い completadas'
-                          : hasCompletedA
-                            ? '1 de 5 · あ completada'
-                            : 'Vocales · あいうえお'}
-                </ThemedText>
-                <ThemedText themeColor="textSecondary" style={styles.nextStepDescription}>
-                  {hasCompletedO
-                    ? 'Ya reconoces y escribes las cinco vocales. El próximo grupo será la Fila K.'
-                    : hasCompletedE
-                      ? 'Ya reconoces cuatro vocales. Tu próximo carácter será お.'
-                      : hasCompletedU
-                        ? 'Ya reconoces tres vocales. Tu próximo carácter será え.'
-                        : hasCompletedI
-                          ? 'Ya reconoces dos vocales. Tu próximo carácter será う.'
-                          : hasCompletedA
-                            ? 'Has dado el primer paso. Tu próximo carácter será い.'
-                            : 'Empezarás por あ y avanzarás un carácter cada vez.'}
-                </ThemedText>
+                {completed !== null && (
+                  <>
+                    <ThemedText style={styles.nextStepTitle}>
+                      {vowelProgress
+                        ? `${vowelProgress} de ${progress.total} · ${completedSymbols} ${vowelProgress === 1 ? 'completada' : 'completadas'}`
+                        : 'Vocales · あいうえお'}
+                    </ThemedText>
+                    <ThemedText themeColor="textSecondary" style={styles.nextStepDescription}>
+                      {progress.isComplete
+                        ? 'Ya reconoces y escribes las cinco vocales. El próximo grupo será la Fila K.'
+                        : vowelProgress
+                          ? `Ya reconoces ${vowelProgress} ${vowelProgress === 1 ? 'vocal' : 'vocales'}. Tu próximo carácter será ${targetLesson.character.symbol}.`
+                          : 'Empezarás por あ y avanzarás un carácter cada vez.'}
+                    </ThemedText>
+                  </>
+                )}
+                {error && (
+                  <Pressable accessibilityRole="button" onPress={reload}>
+                    <ThemedText accessibilityLiveRegion="polite">{error}</ThemedText>
+                    <ThemedText>REINTENTAR</ThemedText>
+                  </Pressable>
+                )}
               </ThemedView>
             </View>
 
@@ -134,7 +114,7 @@ export default function HiraganaPathScreen() {
                     isLast={index === hiraganaPath.length - 1}
                     item={item}
                     key={item.id}
-                    onPress={item.id === 'vowels' ? () => router.push(nextLessonHref) : undefined}
+                    onPress={item.id === 'vowels' && completed !== null ? () => router.push(targetLesson.href) : undefined}
                     progress={item.id === 'vowels' && vowelProgress ? vowelProgress : undefined}
                     state={state}
                   />
